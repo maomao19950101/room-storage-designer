@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>室内收纳多风格版本管理与 3D 实时切换系统</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      user-select: none;
+    }
+    body {
+      overflow: hidden;
+      background: #0d1117;
+      color: #f1f5f9;
+    }
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+    }
+    /* HUD Overlay */
+    .hud-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
+    }
+    .top-header {
+      pointer-events: auto;
+      background: rgba(18, 22, 34, 0.92);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1050px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    }
+    .title-block h1 {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .title-block p {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 3px;
+    }
+    .ver-badge {
+      font-size: 11px;
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-family: monospace;
+    }
+
+    /* Version Selector Tabs */
+    .version-selector {
+      display: flex;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      gap: 4px;
+    }
+    .ver-tab {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ver-tab:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .ver-tab.active {
+      background: #3b82f6;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    .ver-tab.active.tech {
+      background: #475569;
+      border: 1px solid #94a3b8;
+    }
+    .ver-tab.active.camping {
+      background: #059669;
+    }
+    .ver-tab.active.muji {
+      background: #d97706;
+    }
+
+    /* Version BOM Drawer */
+    .bom-panel {
+      pointer-events: auto;
+      position: absolute;
+      right: 20px;
+      top: 86px;
+      width: 380px;
+      background: rgba(18, 22, 34, 0.94);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.6);
+      transition: all 0.3s;
+    }
+    .bom-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 12px;
+    }
+    .bom-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+    .bom-budget {
+      font-size: 16px;
+      font-weight: 800;
+      color: #34d399;
+    }
+    .bom-items {
+      max-height: 380px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    .bom-item-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 8px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+    }
+    .bom-item-name { color: #f1f5f9; font-weight: 600; }
+    .bom-item-spec { color: #94a3b8; font-size: 11px; margin-top: 2px; }
+    .bom-item-price { color: #34d399; font-weight: 700; }
+    .bom-tag {
+      display: inline-block;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      margin-right: 4px;
+    }
+
+    /* Bottom Navigation */
+    .bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .camera-tabs {
+      pointer-events: auto;
+      background: rgba(18, 22, 34, 0.9);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 6px 10px;
+      border-radius: 12px;
+      display: flex;
+      gap: 6px;
+    }
+    .cam-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .cam-btn.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #fff;
+    }
+  </style>
+
+  <script src="./libs/three.min.js"></script>
+  <script src="./libs/OrbitControls.js"></script>
+  <script src="./libs/tween.umd.js"></script>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <!-- HUD Layer -->
+  <div class="hud-layer">
+    <!-- Top Header & Version Bar -->
+    <div class="top-header">
+      <div class="title-block">
+        <h1>🏡 房间收纳空间管理看板 <span id="verBadge" class="ver-badge">v2.0-Tech</span></h1>
+        <p>1:1 毫米级真实比例 · 门窗床结构严格锁定 · 自由切换风格与预算方案</p>
+      </div>
+
+      <!-- Version Selector -->
+      <div class="version-selector">
+        <button id="tab-v1" class="ver-tab" onclick="switchVersion('v1')">v1.0 免打孔基础款 (¥164)</button>
+        <button id="tab-v2" class="ver-tab tech active" onclick="switchVersion('v2')">v2.0 黑金机能极客 (¥1,150)</button>
+        <button id="tab-v3" class="ver-tab camping" onclick="switchVersion('v3')">v2.1 都市露营游牧 (¥980)</button>
+        <button id="tab-v4" class="ver-tab muji" onclick="switchVersion('v4')">v2.2 日式暖木MUJI (¥1,080)</button>
+      </div>
+    </div>
+
+    <!-- Right BOM & Style Drawer -->
+    <div class="bom-panel">
+      <div class="bom-header">
+        <div>
+          <div id="bomStyleName" class="bom-title">🛠️ 黑金机能·潮流运动极客版</div>
+          <div id="bomStyleDesc" style="font-size:11px; color:#94a3b8; margin-top:2px;">冷轧钢洞洞板 + 暖光线型灯 + 深灰降噪地毯</div>
+        </div>
+        <div id="bomTotalBudget" class="bom-budget">¥1,150</div>
+      </div>
+
+      <div id="bomList" class="bom-items">
+        <!-- Dynamically injected -->
+      </div>
+
+      <div style="font-size:11px; color:#64748b; border-top:1px solid rgba(255,255,255,0.08); padding-top:8px;">
+        💡 版本差异：已针对羽毛球装备/猫粮/零食进行材质匹配，换房全套可无损拆卸。
+      </div>
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="bottom-bar">
+      <div class="camera-tabs">
+        <button class="cam-btn active" onclick="setCam('iso')">🌐 3D 轴测透视</button>
+        <button class="cam-btn" onclick="setCam('top')">📐 垂直顶视</button>
+        <button class="cam-btn" onclick="setCam('wall')">🏸 墙面核心陈列</button>
+        <button class="cam-btn" onclick="setCam('desk')">💻 书桌工作区</button>
+        <button class="cam-btn" onclick="setCam('bed')">🛏️ 床底收纳暗舱</button>
+      </div>
+
+      <div style="background: rgba(18,22,34,0.85); padding: 6px 14px; border-radius: 20px; font-size: 11px; color:#94a3b8; border:1px solid rgba(255,255,255,0.08);">
+        🖱️ 鼠标左键拖拽旋转 | 滚轮缩放 | 切换顶部版本观察实时材质与灯光变化
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- 1. Version Data Schemas ---
+    const versions = {
+      v1: {
+        badge: 'v1.0-Basic',
+        name: '📦 基础免打孔实用版',
+        desc: '门后挂架 + 移动碳钢推车 + 床底扁箱 (零打孔)',
+        budget: '¥164',
+        lighting: { amb: 0.6, sun: 0.9, color: 0xffffff, warm: false },
+        rugColor: 0x475569,
+        wallSystem: 'door_rack',
+        wallColor: 0xeeece8,
+        storageType: 'basic',
+        items: [
+          { name: '超薄门背免打孔挂排', spec: '航空铝 / 6连钩 / 间隙<1.5mm', price: '¥22.9', tag: '门后' },
+          { name: '三层碳钢万向轮推车', spec: '宽32cm × 长45cm (窄版桌隙)', price: '¥46.8', tag: '桌旁' },
+          { name: '斜口大开口零食整理盒', spec: 'PET 高透材质 / 宽20cm', price: '¥9.9', tag: '零食' },
+          { name: '带轮密封防潮储粮桶', spec: '食品级 PP / 5-10kg 硅胶圈', price: '¥29.9', tag: '宠物' },
+          { name: '双向对开盖床底滑轮扁箱', spec: '高17cm × 长80cm (2个装)', price: '¥39.9', tag: '床底' },
+          { name: '防泼溅硅胶餐垫', spec: '48cm × 30cm 加厚卷边', price: '¥15.0', tag: '宠物' }
+        ]
+      },
+      v2: {
+        badge: 'v2.0-Tech',
+        name: '🛠️ 黑金机能·潮流运动极客版',
+        desc: '冷轧钢洞洞板 + 暖光线型灯 + 深灰降噪地毯 (打孔升级)',
+        budget: '¥1,150',
+        lighting: { amb: 0.45, sun: 1.4, color: 0xffaa44, warm: true },
+        rugColor: 0x1e293b,
+        wallSystem: 'black_pegboard',
+        wallColor: 0x242730,
+        storageType: 'tech',
+        items: [
+          { name: '重型冷轧钢黑色洞洞板 (1.2m×0.8m)', spec: '膨胀螺丝固定 / 承重80kg', price: '¥280', tag: '主墙面' },
+          { name: '专业羽毛球拍斜插架 + 专用挂钩', spec: '哑光黑防刮胶皮配件组', price: '¥65', tag: '球拍展陈' },
+          { name: '3000K 磁吸暖光线型氛围灯带', spec: 'Type-C充电 / 无线感应 (2支)', price: '¥120', tag: '灯光' },
+          { name: '深灰色大块短绒阻燃地毯 (1.6m×2.3m)', spec: '加厚隔音防滑底 / 遮盖旧地砖', price: '¥185', tag: '地面' },
+          { name: '全黑碳化铝合金三层小推车', spec: '工业级静音万向刹车轮', price: '¥88', tag: '桌旁' },
+          { name: '哑光黑加厚按压密封储粮桶 (10kg)', spec: '磁吸量勺 + 密封视窗', price: '¥79', tag: '宠物' },
+          { name: '黑色半透明抽拉床底箱 (4个装)', spec: '静音滑轮 / 避光防潮', price: '¥168', tag: '床底' },
+          { name: '磁吸理线器与桌面集线盒', spec: '全黑极简阻燃材质', price: '¥45', tag: '数码' },
+          { name: '墙面修补膏 + 补漆套装 (退租备用)', spec: '250g含刮刀砂纸', price: '¥9.9', tag: '退租神器' }
+        ]
+      },
+      v3: {
+        badge: 'v2.1-Camping',
+        name: '🏕️ 都市山系·露营游牧风',
+        desc: '侧开门折叠箱组 + 剑麻猫抓地毯 + 墙面原木猫跳板',
+        budget: '¥980',
+        lighting: { amb: 0.55, sun: 1.2, color: 0xffbb66, warm: true },
+        rugColor: 0x8a7051,
+        wallSystem: 'cat_shelves',
+        wallColor: 0xded8cc,
+        storageType: 'camping',
+        items: [
+          { name: '侧开门户外露营折叠箱 (5个组合)', spec: '军绿/卡其 55L / 叠放可当边柜', price: '¥230', tag: '全屋收纳' },
+          { name: '实木蛋卷板 (折叠箱专用盖)', spec: '榉木展开即变零食茶几', price: '¥68', tag: '边几' },
+          { name: '天然剑麻加厚猫抓地毯 (1.4m×2.0m)', spec: '耐猫抓不掉屑 / 户外粗粝质感', price: '¥195', tag: '地面' },
+          { name: '原木壁挂猫跳板 + 透明太空舱 (3件套)', spec: '实木打孔上墙 / 猫咪高空跑道', price: '¥180', tag: '猫咪领地' },
+          { name: '复古暖光露营马灯 (百亩同款)', spec: '无极调光 / 暖黄光氛围感拉满', price: '¥75', tag: '灯光' },
+          { name: '运动包与球拍战术挂网', spec: '高强度伞绳编织网', price: '¥42', tag: '装备' },
+          { name: '不锈钢户外露营储粮桶 (带锁扣)', spec: '密封防潮防熊孩子猫咪', price: '¥68', tag: '宠物' },
+          { name: '退租补墙膏套装', spec: '即涂即白无痕交房', price: '¥9.9', tag: '退租神器' }
+        ]
+      },
+      v4: {
+        badge: 'v2.2-MUJI',
+        name: '🌿 日式暖木·MUJI 治愈原木风',
+        desc: '宜家 BOAXEL 导轨架 + 半透明抽屉 + 奶白遮光窗帘',
+        budget: '¥1,080',
+        lighting: { amb: 0.75, sun: 1.1, color: 0xffeedd, warm: false },
+        rugColor: 0xd5cbbe,
+        wallSystem: 'boaxel_track',
+        wallColor: 0xf7f5f0,
+        storageType: 'muji',
+        items: [
+          { name: '宜家博阿克塞 BOAXEL 墙面导轨架', spec: '2根立柱+4块层板 (承重120kg)', price: '¥340', tag: '主收纳' },
+          { name: '磨砂半透明抽屉式收纳箱 (6个组)', spec: '爱丽思同款自由组合 / 藏八露二', price: '¥198', tag: '分类舱' },
+          { name: '日式纯白斜口零食立式收纳盒', spec: '食品级环保塑料 (4个)', price: '¥48', tag: '零食' },
+          { name: '日式加厚高垂感奶白色窗帘 (双幅)', spec: '90%遮光 / 奶油系温润视觉', price: '¥115', tag: '软装' },
+          { name: '纯白原木按压防潮储粮桶 (10kg)', spec: '极简无印风设计', price: '¥65', tag: '宠物' },
+          { name: '壁挂原木球拍隐形展示架', spec: '纯实木卡槽 / 简约悬浮感', price: '¥55', tag: '运动' },
+          { name: '米白羊羔绒脚垫 + 落地阅读灯', spec: '3000K暖白柔光护眼', price: '¥135', tag: '氛围' },
+          { name: '退租补孔膏工具包', spec: '一刮即平', price: '¥9.9', tag: '退租神器' }
+        ]
+      }
+    };
+
+    // --- 2. Three.js Scene Setup ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0e1117);
+
+    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(8.5, 9, 8.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 - 0.05;
+    controls.minDistance = 3;
+    controls.maxDistance = 25;
+    controls.target.set(0, 1.2, 0);
+
+    // --- 3. Dynamic Lighting ---
+    const ambLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfff7e6, 1.2);
+    sunLight.position.set(-6, 8, 4);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 25;
+    sunLight.shadow.camera.left = -5;
+    sunLight.shadow.camera.right = 5;
+    sunLight.shadow.camera.top = 5;
+    sunLight.shadow.camera.bottom = -5;
+    scene.add(sunLight);
+
+    // Spot accent light for tech / wall display
+    const accentSpot = new THREE.SpotLight(0xffaa44, 2.0, 8, Math.PI / 5, 0.3);
+    accentSpot.position.set(-0.5, 2.6, 0.5);
+    accentSpot.target.position.set(-1.8, 1.6, 0.2);
+    scene.add(accentSpot);
+    scene.add(accentSpot.target);
+
+    // --- 4. Room Shell (Strict 3.4m × 4.6m Scale) ---
+    const floorMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(3.6, 0.2, 4.8),
+      new THREE.MeshStandardMaterial({ color: 0xba9b7a, roughness: 0.5 })
+    );
+    floorMesh.position.set(0, -0.1, 0);
+    floorMesh.receiveShadow = true;
+    scene.add(floorMesh);
+
+    // Dynamic Rug
+    const rugMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 });
+    const rugMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3.2), rugMat);
+    rugMesh.rotation.x = -Math.PI / 2;
+    rugMesh.position.set(-0.2, 0.015, 0.2);
+    rugMesh.receiveShadow = true;
+    scene.add(rugMesh);
+
+    // Walls
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0xeeece8, roughness: 0.9 });
+    const northWall = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.8, 0.16), wallMat);
+    northWall.position.set(0, 1.4, -2.48);
+    northWall.receiveShadow = true;
+    scene.add(northWall);
+
+    const eastWall = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.8, 4.8), wallMat);
+    eastWall.position.set(1.88, 1.4, 0);
+    eastWall.receiveShadow = true;
+    scene.add(eastWall);
+
+    const doorWall = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.8, 2.2), wallMat);
+    doorWall.position.set(-1.88, 1.4, 1.3);
+    scene.add(doorWall);
+
+    // Door
+    const doorLeaf = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, 2.1, 0.9),
+      new THREE.MeshStandardMaterial({ color: 0x4a3b32 })
+    );
+    doorLeaf.position.set(-1.88, 1.05, -1.65);
+    scene.add(doorLeaf);
+
+    // Bed (Anchor: East Wall 1.5m x 2.0m)
+    const bedGroup = new THREE.Group();
+    const bedBase = new THREE.Mesh(
+      new THREE.BoxGeometry(1.54, 0.2, 2.02),
+      new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.7 })
+    );
+    bedBase.position.y = 0.25;
+    bedBase.castShadow = true;
+    bedBase.receiveShadow = true;
+    bedGroup.add(bedBase);
+
+    const mattress = new THREE.Mesh(
+      new THREE.BoxGeometry(1.5, 0.22, 2.0),
+      new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.9 })
+    );
+    mattress.position.y = 0.46;
+    bedGroup.add(mattress);
+
+    const duvet = new THREE.Mesh(
+      new THREE.BoxGeometry(1.52, 0.14, 1.35),
+      new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85 })
+    );
+    duvet.position.set(0, 0.56, 0.3);
+    bedGroup.add(duvet);
+
+    bedGroup.position.set(0.95, 0, -1.25);
+    scene.add(bedGroup);
+
+    // Desk (Anchor: West Wall 1.2m x 0.6m)
+    const deskTop = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 0.05, 0.6),
+      new THREE.MeshStandardMaterial({ color: 0x3b302a, roughness: 0.5 })
+    );
+    deskTop.position.set(-1.1, 0.75, 0.2);
+    deskTop.castShadow = true;
+    scene.add(deskTop);
+
+    // --- 5. Dynamic Style Groups (Switched by Version) ---
+    const styleGroups = {
+      v1: new THREE.Group(),
+      v2: new THREE.Group(),
+      v3: new THREE.Group(),
+      v4: new THREE.Group()
+    };
+
+    // v1: Door Rack & Simple Cart
+    const v1DoorRack = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.45), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+    v1DoorRack.position.set(-1.82, 1.9, -1.65);
+    styleGroups.v1.add(v1DoorRack);
+    const v1Cart = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.75, 0.45), new THREE.MeshStandardMaterial({ color: 0x475569 }));
+    v1Cart.position.set(-1.1, 0.38, -0.45);
+    styleGroups.v1.add(v1Cart);
+
+    // v2: Heavy-Duty Black Pegboard with Badminton Rackets & Lighting
+    const v2Pegboard = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 1.2, 1.0),
+      new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.8, roughness: 0.2 })
+    );
+    v2Pegboard.position.set(-1.82, 1.6, 0.2);
+    v2Pegboard.castShadow = true;
+    styleGroups.v2.add(v2Pegboard);
+
+    // Rackets on Pegboard
+    [-0.2, 0.2].forEach(rz => {
+      const rHead = new THREE.Mesh(
+        new THREE.TorusGeometry(0.12, 0.015, 8, 20),
+        new THREE.MeshStandardMaterial({ color: 0x3b82f6, metalness: 0.6 })
+      );
+      rHead.position.set(-1.78, 1.7, 0.2 + rz);
+      styleGroups.v2.add(rHead);
+      const rHandle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.01, 0.01, 0.45),
+        new THREE.MeshStandardMaterial({ color: 0x0f172a })
+      );
+      rHandle.position.set(-1.78, 1.45, 0.2 + rz);
+      styleGroups.v2.add(rHandle);
+    });
+
+    const v2Cart = new THREE.Mesh(
+      new THREE.BoxGeometry(0.32, 0.82, 0.45),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.1 })
+    );
+    v2Cart.position.set(-1.1, 0.41, -0.45);
+    styleGroups.v2.add(v2Cart);
+
+    // v3: Camping Modular Boxes (Stacked) & Wall Cat Steps
+    for (let i = 0; i < 3; i++) {
+      const cBox = new THREE.Mesh(
+        new THREE.BoxGeometry(0.38, 0.3, 0.58),
+        new THREE.MeshStandardMaterial({ color: 0x3f4f38, roughness: 0.8 }) // Army Green
+      );
+      cBox.position.set(-1.1, 0.15 + i * 0.31, -0.45);
+      styleGroups.v3.add(cBox);
+    }
+    // Wooden Top Table Board
+    const woodTop = new THREE.Mesh(
+      new THREE.BoxGeometry(0.42, 0.03, 0.62),
+      new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 })
+    );
+    woodTop.position.set(-1.1, 1.08, -0.45);
+    styleGroups.v3.add(woodTop);
+
+    // Cat Wall Shelves
+    [ [1.2, 0.5], [1.6, 0.0], [2.0, -0.5] ].forEach(([cy, cz]) => {
+      const step = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.03, 0.35),
+        new THREE.MeshStandardMaterial({ color: 0xa07855 })
+      );
+      step.position.set(-1.8, cy, cz);
+      styleGroups.v3.add(step);
+    });
+
+    // v4: MUJI BOAXEL White Tracks & Frosted Drawers
+    const boaxelRail = new THREE.Mesh(
+      new THREE.BoxGeometry(0.03, 1.6, 0.9),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 })
+    );
+    boaxelRail.position.set(-1.82, 1.6, 0.2);
+    styleGroups.v4.add(boaxelRail);
+
+    for (let i = 0; i < 4; i++) {
+      const mujiBox = new THREE.Mesh(
+        new THREE.BoxGeometry(0.35, 0.2, 0.45),
+        new THREE.MeshPhysicalMaterial({ color: 0xffffff, transmission: 0.75, opacity: 0.85, transparent: true })
+      );
+      mujiBox.position.set(-1.1, 0.1 + i * 0.22, -0.45);
+      styleGroups.v4.add(mujiBox);
+    }
+
+    Object.values(styleGroups).forEach(g => scene.add(g));
+
+    // --- 6. Version Switching Logic ---
+    let currentVer = 'v2';
+    function switchVersion(verKey) {
+      currentVer = verKey;
+      const vData = versions[verKey];
+
+      // Update UI Tabs
+      document.querySelectorAll('.ver-tab').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + verKey).classList.add('active');
+
+      document.getElementById('verBadge').innerText = vData.badge;
+      document.getElementById('bomStyleName').innerText = vData.name;
+      document.getElementById('bomStyleDesc').innerText = vData.desc;
+      document.getElementById('bomTotalBudget').innerText = vData.budget;
+
+      // Update BOM items
+      const listEl = document.getElementById('bomList');
+      listEl.innerHTML = '';
+      vData.items.forEach(it => {
+        const row = document.createElement('div');
+        row.className = 'bom-item-row';
+        row.innerHTML = `
+          <div>
+            <div class="bom-item-name"><span class="bom-tag">${it.tag}</span>${it.name}</div>
+            <div class="bom-item-spec">${it.spec}</div>
+          </div>
+          <div class="bom-item-price">${it.price}</div>
+        `;
+        listEl.appendChild(row);
+      });
+
+      // Update 3D Visuals
+      Object.keys(styleGroups).forEach(k => {
+        styleGroups[k].visible = (k === verKey);
+      });
+
+      // Update Lighting & Materials
+      rugMat.color.setHex(vData.rugColor);
+      ambLight.intensity = vData.lighting.amb;
+      sunLight.intensity = vData.lighting.sun;
+      sunLight.color.setHex(vData.lighting.color);
+      accentSpot.visible = vData.lighting.warm;
+    }
+
+    // Camera preset tweens
+    function tweenCam(pos, target, dur = 1000) {
+      new TWEEN.Tween(camera.position).to(pos, dur).easing(TWEEN.Easing.Cubic.Out).start();
+      new TWEEN.Tween(controls.target).to(target, dur).easing(TWEEN.Easing.Cubic.Out).start();
+    }
+    function setCam(mode) {
+      document.querySelectorAll('.camera-tabs button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (mode === 'iso') tweenCam({ x: 8.5, y: 9, z: 8.5 }, { x: 0, y: 1.2, z: 0 });
+      else if (mode === 'top') tweenCam({ x: 0.01, y: 14, z: 0.01 }, { x: 0, y: 0, z: 0 });
+      else if (mode === 'wall') tweenCam({ x: -0.2, y: 1.8, z: 0.3 }, { x: -1.8, y: 1.5, z: 0.2 });
+      else if (mode === 'desk') tweenCam({ x: -0.4, y: 1.5, z: 0.8 }, { x: -1.1, y: 0.75, z: 0.2 });
+      else if (mode === 'bed') tweenCam({ x: -0.8, y: 1.2, z: -0.8 }, { x: 0.5, y: 0.2, z: -0.8 });
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      TWEEN.update();
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    requestAnimationFrame(animate);
+
+    // Initialize with v2
+    switchVersion('v2');
+  </script>
+</body>
+</html>

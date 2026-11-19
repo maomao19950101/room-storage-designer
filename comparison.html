@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>出租屋真实改造前后对比与收纳设计方案</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    body {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 16px;
+    }
+    header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header p {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-top: 6px;
+    }
+    .badge {
+      font-size: 12px;
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    /* Tab navigation */
+    .tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+    .tab-btn.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    }
+
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Comparison Slider View */
+    .slider-box {
+      position: relative;
+      width: 100%;
+      max-width: 1100px;
+      height: 680px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      user-select: none;
+      background: #000;
+    }
+    .img-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .img-layer img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .img-before {
+      z-index: 1;
+    }
+    .img-after {
+      z-index: 2;
+      width: 50%;
+      overflow: hidden;
+      border-right: 3px solid #3b82f6;
+    }
+    .img-after img {
+      width: 1100px; /* match container width */
+      max-width: none;
+    }
+    .slider-handle {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 44px;
+      height: 44px;
+      margin-left: -22px;
+      top: calc(50% - 22px);
+      background: #3b82f6;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      z-index: 10;
+      cursor: ew-resize;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+    .tag-label {
+      position: absolute;
+      bottom: 20px;
+      padding: 6px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+      z-index: 5;
+    }
+    .tag-before {
+      right: 20px;
+      background: rgba(239, 68, 68, 0.85);
+      color: white;
+    }
+    .tag-after {
+      left: 20px;
+      background: rgba(16, 185, 129, 0.85);
+      color: white;
+    }
+
+    /* Blueprint view */
+    .blueprint-view img {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    }
+
+    /* 3D Frame view */
+    .iframe-3d {
+      width: 100%;
+      height: 680px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      background: #181a20;
+    }
+
+    /* Procurement Table */
+    .shopping-section {
+      margin-top: 32px;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .shopping-section h2 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    th {
+      background: rgba(15, 23, 42, 0.8);
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .kw-tag {
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .price {
+      color: #34d399;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🏡 出租屋空间收纳改造：实景图对点设计方案 <span class="badge">实景 1:1 针对性重构</span></h1>
+      <p>解决：羽毛球装备占地、大袋猫粮敞口、零食散落、快递黄纸箱堆积。所有改造方案 100% 免打孔，搬家一车带走。</p>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('slider')">🔄 实景改造前后滑动对比 (Before & After)</button>
+      <button class="tab-btn" onclick="switchTab('blueprint')">📐 照片原位点对点标注图 (In-situ Blueprint)</button>
+      <button class="tab-btn" onclick="switchTab('3d')">🌐 3D 交互三维空间模型 (Interactive 3D)</button>
+    </div>
+
+    <!-- Tab 1: Comparison Slider -->
+    <div id="tab-slider" class="tab-content active">
+      <div class="slider-box" id="sliderBox">
+        <!-- Before Layer -->
+        <div class="img-layer img-before">
+          <img id="imgBefore" src="./assets/cluttered_chinese_rental_room_1795068770948.jpg" alt="改造前">
+          <div class="tag-label tag-before">📦 改造前现状 (快递箱堆地 / 球拍靠墙)</div>
+        </div>
+        <!-- After Layer -->
+        <div class="img-layer img-after" id="afterLayer">
+          <img id="imgAfter" src="./assets/organized_room_after_makeover_1795069166491.jpg" alt="改造后">
+          <div class="tag-label tag-after">✨ 改造后实景 (地面全清空 / 门后垂直收纳)</div>
+        </div>
+        <!-- Handle -->
+        <div class="slider-handle" id="sliderHandle">↔</div>
+      </div>
+      <p style="text-align: center; color: #94a3b8; font-size: 13px; margin-top: 10px;">
+        👆 鼠标按住中间蓝球左右滑动，查看同一个房间在实施收纳方案前后的真实视觉对比
+      </p>
+    </div>
+
+    <!-- Tab 2: Blueprint -->
+    <div id="tab-blueprint" class="tab-content">
+      <div class="blueprint-view">
+        <img src="./assets/annotated_room_blueprint.jpg" alt="点对点标注图">
+      </div>
+    </div>
+
+    <!-- Tab 3: 3D Model -->
+    <div id="tab-3d" class="tab-content">
+      <iframe class="iframe-3d" src="index.html"></iframe>
+    </div>
+
+    <!-- Shopping Table -->
+    <div class="shopping-section">
+      <h2>🛒 实景改造对应的精准免打孔采购清单</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>序号</th>
+            <th>对应实景区域</th>
+            <th>采购单品</th>
+            <th>建议规格 / 材质</th>
+            <th>参考价格</th>
+            <th>电商搜索关键词</th>
+            <th>解决的原图痛点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>门背后</td>
+            <td>免打孔门背挂排架</td>
+            <td>航空铝 / 6连挂钩 / 门缝厚度<1.5mm</td>
+            <td class="price">¥22.9</td>
+            <td><span class="kw-tag">门后挂钩 免打孔 扁平超薄铝合金</span></td>
+            <td>解决羽毛球包靠墙倒地，竖立保护拍线</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>书桌旁</td>
+            <td>三层碳钢万向轮推车</td>
+            <td>宽 32cm × 长 45cm，带刹车轮</td>
+            <td class="price">¥46.8</td>
+            <td><span class="kw-tag">小推车置物架 带轮 碳钢 加厚</span></td>
+            <td>顶层装零食，中层放猫罐头，底层放储粮桶</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>推车顶层</td>
+            <td>斜口大开窗零食盒</td>
+            <td>PET 高透材质 / 宽 20cm</td>
+            <td class="price">¥9.9</td>
+            <td><span class="kw-tag">斜口收纳盒 桌面零食收纳 亚克力</span></td>
+            <td>零食袋立式排放，保质期一眼可见</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>推车底层</td>
+            <td>带轮密封防潮猫粮桶</td>
+            <td>食品级 PP + 硅胶圈 / 5-10kg</td>
+            <td class="price">¥29.9</td>
+            <td><span class="kw-tag">宠物储粮桶 密封 防潮 带滑轮</span></td>
+            <td>消灭原图敞口大猫粮袋，防潮防猫抓</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>床底下</td>
+            <td>双向对开盖滑轮扁箱</td>
+            <td>净高 17cm × 长 80cm (适配床底)</td>
+            <td class="price">¥39.9 (2个)</td>
+            <td><span class="kw-tag">床底收纳箱 带轮 扁平 大容量 塑料</span></td>
+            <td>彻底消灭地面 3 个快递黄纸箱，杂物暗藏</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>宠物角</td>
+            <td>防水防泼溅硅胶餐垫</td>
+            <td>带凸起边缘 / 48cm × 30cm</td>
+            <td class="price">¥15.0</td>
+            <td><span class="kw-tag">宠物硅胶餐垫 防水 防漏 食盆垫</span></td>
+            <td>解决猫咪干粮和水溅在地面，一擦即净</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    // Comparison slider logic
+    const box = document.getElementById('sliderBox');
+    const afterLayer = document.getElementById('afterLayer');
+    const handle = document.getElementById('sliderHandle');
+    const imgAfter = document.getElementById('imgAfter');
+
+    function syncImgWidth() {
+      if (box && imgAfter) {
+        imgAfter.style.width = box.offsetWidth + 'px';
+      }
+    }
+    window.addEventListener('resize', syncImgWidth);
+    syncImgWidth();
+
+    let isDragging = false;
+    function moveSlider(clientX) {
+      const rect = box.getBoundingClientRect();
+      let offsetX = clientX - rect.left;
+      if (offsetX < 0) offsetX = 0;
+      if (offsetX > rect.width) offsetX = rect.width;
+
+      const pct = (offsetX / rect.width) * 100;
+      afterLayer.style.width = pct + '%';
+      handle.style.left = pct + '%';
+    }
+
+    handle.addEventListener('mousedown', () => isDragging = true);
+    window.addEventListener('mouseup', () => isDragging = false);
+    window.addEventListener('mousemove', (e) => {
+      if (isDragging) moveSlider(e.clientX);
+    });
+
+    // Touch support for tablets/trackpads
+    handle.addEventListener('touchstart', () => isDragging = true);
+    window.addEventListener('touchend', () => isDragging = false);
+    window.addEventListener('touchmove', (e) => {
+      if (isDragging && e.touches[0]) moveSlider(e.touches[0].clientX);
+    });
+  </script>
+</body>
+</html>
