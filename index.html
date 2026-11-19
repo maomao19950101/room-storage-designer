@@ -116,6 +116,11 @@
     .ver-tab.active.muji {
       background: #d97706;
     }
+    .ver-tab.active.cat {
+      background: #b45309;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(180, 83, 9, 0.5);
+    }
 
     /* Version BOM Drawer */
     .bom-panel {
@@ -226,8 +231,9 @@
 
       <!-- Version Selector -->
       <div class="version-selector">
+        <button id="tab-v5" class="ver-tab cat active" onclick="switchVersion('v5')">🐱 v2.3 人猫共居暖木版 (¥1,260)</button>
         <button id="tab-v1" class="ver-tab" onclick="switchVersion('v1')">v1.0 免打孔基础款 (¥164)</button>
-        <button id="tab-v2" class="ver-tab tech active" onclick="switchVersion('v2')">v2.0 黑金机能极客 (¥1,150)</button>
+        <button id="tab-v2" class="ver-tab tech" onclick="switchVersion('v2')">v2.0 黑金机能极客 (¥1,150)</button>
         <button id="tab-v3" class="ver-tab camping" onclick="switchVersion('v3')">v2.1 都市露营游牧 (¥980)</button>
         <button id="tab-v4" class="ver-tab muji" onclick="switchVersion('v4')">v2.2 日式暖木MUJI (¥1,080)</button>
       </div>
@@ -352,6 +358,28 @@
           { name: '壁挂原木球拍隐形展示架', spec: '纯实木卡槽 / 简约悬浮感', price: '¥55', tag: '运动' },
           { name: '米白羊羔绒脚垫 + 落地阅读灯', spec: '3000K暖白柔光护眼', price: '¥135', tag: '氛围' },
           { name: '退租补孔膏工具包', spec: '一刮即平', price: '¥9.9', tag: '退租神器' }
+        ]
+      },
+      v5: {
+        badge: 'v2.3-CatLiving',
+        name: '🐱 人猫共居·暖木奶油治愈版 (养猫专宠)',
+        desc: '原木猫道太空舱 + 剑麻耐抓毯 + 封闭式防猫零食边柜',
+        budget: '¥1,260',
+        lighting: { amb: 0.75, sun: 1.15, color: 0xfff2e0, warm: true },
+        rugColor: 0xba9e7b,
+        wallSystem: 'cat_master',
+        wallColor: 0xfdfbf7,
+        storageType: 'cat_living',
+        items: [
+          { name: '原木墙面猫跳板 + 透明亚克力太空舱 (4件套)', spec: '实木无漆打孔上墙 / 承重25kg / 空中猫道', price: '¥198', tag: '猫咪领地' },
+          { name: '天然剑麻加厚加密地毯 (1.6m×2.3m)', spec: '耐猫爪狂抓不掉屑 / 燕麦浅色完全隐形猫毛', price: '¥210', tag: '地面耐抓' },
+          { name: '双门封闭式奶油白防猫零食边柜 (带锁扣)', spec: '严防猫咪半夜掏零食 / 柜顶可置物 / 宽40cm', price: '¥260', tag: '防猫零食' },
+          { name: '壁挂高位羽毛球拍实木保护架', spec: '离地2米安装 / 避开猫抓与手胶啃咬', price: '¥58', tag: '运动保护' },
+          { name: '加厚密封食品级猫粮储粮桶 (10kg卡扣)', spec: '双层硅胶圈密封防潮 / 防猫扑翻', price: '¥68', tag: '宠物防潮' },
+          { name: '实木加高斜口陶瓷双碗 + 自动静音活水机', spec: '护猫颈椎 / 水电分离 / 易清洗', price: '¥125', tag: '猫咪饮食' },
+          { name: '奶白色加厚垂感棉麻遮光帘 (双幅)', spec: '物理抗抓丝 / 柔和奶油漫反射光线', price: '¥115', tag: '软装隔热' },
+          { name: '深灰高边防带砂一体式大号猫砂盆', spec: '侧入式漏砂顶盖 / 杜绝带砂飞溅', price: '¥140', tag: '卫生保洁' },
+          { name: '退租无痕补墙膏工具套装', spec: '抹平交房无痕', price: '¥9.9', tag: '退租神器' }
         ]
       }
     };
@@ -488,7 +516,8 @@
       v1: new THREE.Group(),
       v2: new THREE.Group(),
       v3: new THREE.Group(),
-      v4: new THREE.Group()
+      v4: new THREE.Group(),
+      v5: new THREE.Group()
     };
 
     // v1: Door Rack & Simple Cart
@@ -575,6 +604,51 @@
       styleGroups.v4.add(mujiBox);
     }
 
+    // v5: Cat-Living Solid Pine Wall Catwalk & Enclosed Cat-Proof Cabinet
+    // 1) Wall Catwalk Steps & Acrylic Bubble
+    [ [1.2, 0.7], [1.55, 0.3], [1.9, -0.2], [2.2, -0.7] ].forEach(([cy, cz]) => {
+      const catStep = new THREE.Mesh(
+        new THREE.BoxGeometry(0.22, 0.03, 0.38),
+        new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.6 })
+      );
+      catStep.position.set(-1.8, cy, cz);
+      catStep.castShadow = true;
+      styleGroups.v5.add(catStep);
+    });
+    // Transparent Acrylic Cat Bubble Capsule
+    const catBubble = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+      new THREE.MeshPhysicalMaterial({ color: 0xffffff, transmission: 0.95, opacity: 0.8, transparent: true, roughness: 0.1 })
+    );
+    catBubble.rotation.x = Math.PI;
+    catBubble.position.set(-1.75, 1.9, -0.2);
+    styleGroups.v5.add(catBubble);
+
+    // 2) Enclosed Cat-Proof Cabinet (Cream white with light wood top, doors closed!)
+    const catProofCab = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, 0.86, 0.55),
+      new THREE.MeshStandardMaterial({ color: 0xfefae0, roughness: 0.4 })
+    );
+    catProofCab.position.set(-1.1, 0.43, -0.45);
+    catProofCab.castShadow = true;
+    styleGroups.v5.add(catProofCab);
+
+    // 3) High-Mounted Racket Rack (Mounted at 2.1m high, safe from cat claws!)
+    const highRack = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 0.04, 0.42),
+      new THREE.MeshStandardMaterial({ color: 0xd4a373 })
+    );
+    highRack.position.set(-1.82, 2.3, 0.3);
+    styleGroups.v5.add(highRack);
+    [-0.1, 0.1].forEach(rz => {
+      const rk = new THREE.Mesh(
+        new THREE.TorusGeometry(0.12, 0.015, 8, 20),
+        new THREE.MeshStandardMaterial({ color: 0x3b82f6 })
+      );
+      rk.position.set(-1.78, 2.15, 0.3 + rz);
+      styleGroups.v5.add(rk);
+    });
+
     Object.values(styleGroups).forEach(g => scene.add(g));
 
     // --- 6. Version Switching Logic ---
@@ -651,8 +725,8 @@
     }
     requestAnimationFrame(animate);
 
-    // Initialize with v2
-    switchVersion('v2');
+    // Initialize with v5 (Cat-Living)
+    switchVersion('v5');
   </script>
 </body>
 </html>
