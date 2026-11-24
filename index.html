@@ -659,7 +659,7 @@
 
     // Warm desk pendant light
     const deskLight = new THREE.PointLight(0xffb050, 0.9, 5);
-    deskLight.position.set(-1.1, 1.8, 0.3);
+    deskLight.position.set(-1.1, 1.8, 0.5);
     deskLight.castShadow = true;
     scene.add(deskLight);
 
@@ -918,7 +918,7 @@
     });
 
     addContactShadow(bedGroup, 1.65, 2.15, 0, 0, 0.7);
-    bedGroup.position.set(0.9, 0, -1.2);
+    bedGroup.position.set(0.9, 0, -1.25);
     furnitureGroup.add(bedGroup);
 
     // --- STUDY DESK (1.2m x 0.6m) ---
@@ -982,7 +982,7 @@
     deskGroup.add(lampShade);
 
     addContactShadow(deskGroup, 1.3, 0.7, 0, 0, 0.65);
-    deskGroup.position.set(-1.1, 0, 0.4);
+    deskGroup.position.set(-1.1, 0, 0.6);
     furnitureGroup.add(deskGroup);
 
     // --- ERGONOMIC CHAIR ---
@@ -1013,7 +1013,7 @@
     }
 
     addContactShadow(chairGroup, 0.55, 0.55, 0, 0, 0.55);
-    chairGroup.position.set(-1.1, 0, 0.95);
+    chairGroup.position.set(-1.1, 0, 1.15);
     furnitureGroup.add(chairGroup);
 
     // --- NATURAL SISAL RUNNER RUG (Cat Scratch Proof) ---
@@ -1035,7 +1035,7 @@
       new THREE.MeshStandardMaterial({ map: sisalTex, roughness: 0.9 })
     );
     sisalRug.rotation.x = -Math.PI / 2;
-    sisalRug.position.set(-0.25, 0.002, 0.3);
+    sisalRug.position.set(-0.2, 0.002, 0.4);
     sisalRug.receiveShadow = true;
     furnitureGroup.add(sisalRug);
 
@@ -1110,33 +1110,33 @@
       roughness: 0.2
     });
 
-    [ -0.65, 0.35 ].forEach((bz, idx) => {
+    [ -1.65, -0.75 ].forEach((bz, idx) => {
       const box = new THREE.Mesh(
-        new THREE.RoundedBoxGeometry(0.65, 0.17, 0.85, 4, 0.015),
+        new THREE.RoundedBoxGeometry(0.65, 0.17, 0.82, 4, 0.015),
         frostedMat
       );
-      box.position.set(0.12, 0.09, bz);
+      box.position.set(0.55, 0.09, bz);
       box.castShadow = true;
       bedDrawersGroup.add(box);
 
       // Clothes / Bedding inside visible through frosted walls
       const insideClothes = new THREE.Mesh(
-        new THREE.RoundedBoxGeometry(0.58, 0.12, 0.76, 3, 0.02),
+        new THREE.RoundedBoxGeometry(0.58, 0.12, 0.74, 3, 0.02),
         new THREE.MeshStandardMaterial({ color: (idx === 0 ? 0x3b82f6 : 0xec4899), roughness: 0.9 })
       );
-      insideClothes.position.set(0.12, 0.08, bz);
+      insideClothes.position.set(0.55, 0.08, bz);
       bedDrawersGroup.add(insideClothes);
 
-      // Ergonomic Pull Handle
+      // Ergonomic Pull Handle on outer facing side
       const handle = new THREE.Mesh(
         new THREE.BoxGeometry(0.02, 0.035, 0.16),
         new THREE.MeshStandardMaterial({ color: 0x2563eb })
       );
-      handle.position.set(-0.21, 0.1, bz);
+      handle.position.set(0.22, 0.1, bz);
       bedDrawersGroup.add(handle);
 
       // Mini Castor Wheels
-      [[-0.16, -0.36], [0.4, -0.36], [-0.16, 0.36], [0.4, 0.36]].forEach(([wx, wz]) => {
+      [[0.28, -0.34], [0.82, -0.34], [0.28, 0.34], [0.82, 0.34]].forEach(([wx, wz]) => {
         const castor = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.014), steelMat);
         castor.rotation.z = Math.PI / 2;
         castor.position.set(wx, 0.014, bz + wz);
@@ -1178,12 +1178,12 @@
       new THREE.RoundedBoxGeometry(0.45, 0.01, 0.3, 3, 0.01),
       new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.8 })
     );
-    catMat.position.set(-1.42, 0.006, -1.2);
+    catMat.position.set(-1.42, 0.006, -0.55);
     catStationGroup.add(catMat);
 
     // Elevated Bamboo Bowl Stand
     const bowlStand = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.36, 0.07, 0.16, 3, 0.01), woodMat);
-    bowlStand.position.set(-1.42, 0.045, -1.2);
+    bowlStand.position.set(-1.42, 0.045, -0.55);
     catStationGroup.add(bowlStand);
 
     // 2 Ceramic Bowls (Dry food & Fresh water)
@@ -1193,7 +1193,7 @@
         new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.15 })
       );
       bowl.rotation.x = -0.12;
-      bowl.position.set(-1.42 + bx, 0.085, -1.2);
+      bowl.position.set(-1.42 + bx, 0.085, -0.55);
       catStationGroup.add(bowl);
     });
 
@@ -1202,7 +1202,7 @@
       new THREE.RoundedBoxGeometry(0.3, 0.32, 0.4, 4, 0.02),
       new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 })
     );
-    bucketBase.position.set(-1.42, 0.16, -1.65);
+    bucketBase.position.set(-1.42, 0.16, -0.92);
     bucketBase.castShadow = true;
     catStationGroup.add(bucketBase);
 
@@ -1212,12 +1212,12 @@
       new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.2 })
     );
     bucketGauge.rotation.y = Math.PI / 2;
-    bucketGauge.position.set(-1.268, 0.16, -1.65);
+    bucketGauge.position.set(-1.268, 0.16, -0.92);
     catStationGroup.add(bucketGauge);
 
     // Kinematic Bucket Lid (Hinge at rear)
     const bucketLidPivot = new THREE.Group();
-    bucketLidPivot.position.set(-1.42, 0.32, -1.85);
+    bucketLidPivot.position.set(-1.42, 0.32, -1.12);
 
     const bucketLid = new THREE.Mesh(
       new THREE.RoundedBoxGeometry(0.31, 0.035, 0.41, 3, 0.01),
@@ -1263,7 +1263,7 @@
     catTail.position.set(0.08, 0.03, -0.15);
     catCompanion.add(catTail);
 
-    catCompanion.position.set(-0.25, 0.005, -0.4);
+    catCompanion.position.set(-0.2, 0.005, -0.5);
     catCompanion.rotation.y = -0.5;
     catStationGroup.add(catCompanion);
 
@@ -1290,8 +1290,8 @@
     function toggleDrawer() {
       playGlideSound();
       isDrawerOpen = !isDrawerOpen;
-      // Slides out along X into walkway (from 0 to -0.65m)
-      const targetX = isDrawerOpen ? -0.65 : 0;
+      // Slides out along X from under-bed (0.55m) into walkway (-0.55m delta, stops at X=0.00m)
+      const targetX = isDrawerOpen ? -0.55 : 0;
       document.getElementById('k-drawer').classList.toggle('active', isDrawerOpen);
 
       new TWEEN.Tween(bedDrawersGroup.position)
@@ -1330,7 +1330,7 @@
       {
         id: 'hs-drawer',
         title: '🛏️ 床底双向滑轮扁箱',
-        pos: new THREE.Vector3(0.12, 0.22, -0.15),
+        pos: new THREE.Vector3(0.55, 0.22, -0.75),
         data: {
           title: '🛏️ 磨砂半透双向滑轮扁箱 (2件装)',
           pos: '床底暗空间 (利用 22cm 净高)',
@@ -1343,7 +1343,7 @@
       {
         id: 'hs-snack',
         title: '🍿 桌面分层零食立插盒',
-        pos: new THREE.Vector3(-0.35, 0.95, 0.1),
+        pos: new THREE.Vector3(-0.35, 0.95, 0.6),
         data: {
           title: '🍿 亚克力阶梯式零食收纳架',
           pos: '书桌右上角死角',
@@ -1356,7 +1356,7 @@
       {
         id: 'hs-cat',
         title: '🐱 猫咪防潮密封粮桶角',
-        pos: new THREE.Vector3(-1.42, 0.38, -1.65),
+        pos: new THREE.Vector3(-1.42, 0.38, -0.92),
         data: {
           title: '🐱 10kg 气阀式防潮密封储粮桶',
           pos: '门后角落安全区',
@@ -1488,9 +1488,9 @@
 
       if (mode === 'iso') tweenCam({ x: 4.6, y: 5.2, z: 5.2 }, { x: 0, y: 0.75, z: 0 });
       else if (mode === 'racket') tweenCam({ x: -0.2, y: 2.0, z: -0.3 }, { x: -1.7, y: 1.6, z: -0.6 });
-      else if (mode === 'bed') tweenCam({ x: -0.5, y: 1.4, z: -0.8 }, { x: 0.9, y: 0.25, z: -1.2 });
-      else if (mode === 'desk') tweenCam({ x: -0.2, y: 1.5, z: 0.8 }, { x: -1.1, y: 0.85, z: 0.4 });
-      else if (mode === 'cat') tweenCam({ x: -0.4, y: 1.2, z: -0.9 }, { x: -1.4, y: 0.25, z: -1.4 });
+      else if (mode === 'bed') tweenCam({ x: -0.5, y: 1.4, z: -1.0 }, { x: 0.9, y: 0.25, z: -1.25 });
+      else if (mode === 'desk') tweenCam({ x: -0.2, y: 1.5, z: 1.0 }, { x: -1.1, y: 0.85, z: 0.6 });
+      else if (mode === 'cat') tweenCam({ x: -0.4, y: 1.2, z: -0.6 }, { x: -1.4, y: 0.25, z: -0.75 });
       else if (mode === 'top') tweenCam({ x: 0.01, y: 8.5, z: 0.01 }, { x: 0, y: 0, z: 0 });
     }
 
