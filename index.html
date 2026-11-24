@@ -9,20 +9,21 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       user-select: none;
+      -webkit-font-smoothing: antialiased;
     }
     body {
       overflow: hidden;
       background: #090b10;
       color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "PingFang SC", sans-serif;
     }
     #canvas-container {
+      width: 100vw;
+      height: 100vh;
       position: absolute;
       top: 0;
       left: 0;
-      width: 100vw;
-      height: 100vh;
       z-index: 1;
     }
 
@@ -31,511 +32,509 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 10;
+      width: 100%;
+      height: 100%;
       pointer-events: none;
+      z-index: 10;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       padding: 20px;
     }
 
-    /* Top Header Bar */
-    .header-bar {
-      pointer-events: auto;
-      background: rgba(15, 23, 42, 0.88);
-      backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 18px;
-      padding: 12px 20px;
+    .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      max-width: 1180px;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
-    }
-    .header-info h1 {
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .header-info p {
-      font-size: 11px;
-      color: #94a3b8;
-      margin-top: 2px;
-    }
-    .tag-pill {
-      font-size: 11px;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      color: #34d399;
-      padding: 2px 8px;
-      border-radius: 20px;
-      font-weight: 600;
+      gap: 16px;
+      pointer-events: auto;
     }
 
-    /* Controls Group */
-    .header-controls {
+    .brand-badge {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 12px 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
       display: flex;
       align-items: center;
       gap: 8px;
+      color: #f8fafc;
+      letter-spacing: -0.01em;
     }
-    .btn-tool {
+    .brand-title span.tag {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      font-weight: 600;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    .action-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .kinematics-bar {
+      display: flex;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 6px 10px;
+    }
+
+    .k-btn {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.12);
       color: #e2e8f0;
-      padding: 7px 12px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .btn-tool:hover {
-      background: rgba(255, 255, 255, 0.16);
-      color: #fff;
-    }
-    .btn-tool.active {
-      background: #3b82f6;
-      border-color: #3b82f6;
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
-    }
-    .btn-tool.ar-btn {
-      background: linear-gradient(135deg, #059669, #10b981);
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
-    }
-    .btn-tool.ar-btn:hover {
-      filter: brightness(1.1);
-    }
-
-    /* Kinematics Quick Bar (动力学机械结构测试条) */
-    .kinematics-bar {
-      display: flex;
-      background: rgba(0, 0, 0, 0.45);
-      padding: 3px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      gap: 4px;
-    }
-    .k-btn {
-      background: transparent;
-      border: none;
-      color: #94a3b8;
-      padding: 6px 10px;
-      border-radius: 7px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .k-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
-    .k-btn.active {
-      background: rgba(59, 130, 246, 0.25);
-      color: #60a5fa;
-      border: 1px solid rgba(59, 130, 246, 0.4);
-    }
-
-    /* Side Detail Drawer (Item Spec & Shopping Info) */
-    .drawer-panel {
-      pointer-events: auto;
-      position: absolute;
-      right: 20px;
-      top: 86px;
-      width: 360px;
-      background: rgba(15, 23, 42, 0.94);
-      backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 18px;
-      padding: 20px;
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.65);
-      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      transform: translateX(400px);
-      opacity: 0;
-    }
-    .drawer-panel.show { transform: translateX(0); opacity: 1; }
-    .drawer-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      margin-bottom: 14px;
-    }
-    .drawer-title { font-size: 15px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
-    .drawer-close { background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; }
-    .drawer-close:hover { color: #fff; }
-    .drawer-row { margin-bottom: 11px; }
-    .d-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; margin-bottom: 3px; }
-    .d-val { font-size: 13px; color: #f1f5f9; line-height: 1.45; }
-    .d-highlight { color: #34d399; font-weight: 700; font-size: 15px; }
-    .d-code {
-      display: inline-block;
-      background: rgba(59, 130, 246, 0.15);
-      color: #93c5fd;
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-family: monospace;
       font-size: 12px;
-      margin-top: 4px;
-      border: 1px dashed rgba(59, 130, 246, 0.3);
-    }
-    .d-tip {
-      background: rgba(16, 185, 129, 0.12);
-      border: 1px solid rgba(16, 185, 129, 0.25);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 12px;
-      color: #6ee7b7;
-      line-height: 1.4;
-      margin-top: 14px;
-    }
-
-    /* Analytics HUD Modal (3D Bin-Packing & Space Utilization) */
-    .analytics-panel {
-      pointer-events: auto;
-      position: absolute;
-      left: 20px;
-      top: 86px;
-      width: 350px;
-      background: rgba(15, 23, 42, 0.94);
-      backdrop-filter: blur(24px);
-      border: 1px solid rgba(59, 130, 246, 0.35);
-      border-radius: 18px;
-      padding: 20px;
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.65);
-      display: none;
-    }
-    .analytics-panel.show { display: block; }
-    .ap-title { font-size: 14px; font-weight: 700; color: #60a5fa; margin-bottom: 12px; display: flex; justify-content: space-between; }
-    .meter-block { margin-bottom: 12px; }
-    .meter-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: #cbd5e1; }
-    .meter-bar { width: 100%; height: 7px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; }
-    .meter-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
-    .fill-blue { background: #3b82f6; }
-    .fill-green { background: #10b981; }
-    .fill-amber { background: #f59e0b; }
-
-    /* AR Modal (Mobile 1:1 In-Situ QuickLook) */
-    .ar-modal {
-      pointer-events: auto;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(15, 23, 42, 0.96);
-      backdrop-filter: blur(30px);
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      border-radius: 24px;
-      padding: 30px;
-      width: 440px;
-      max-width: 90vw;
-      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8);
-      z-index: 100;
-      display: none;
-      text-align: center;
-    }
-    .ar-modal.show { display: block; }
-    .ar-qr {
-      width: 180px;
-      height: 180px;
-      background: #ffffff;
-      border-radius: 16px;
-      margin: 16px auto;
-      padding: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-    }
-    .ar-qr svg { width: 100%; height: 100%; }
-    .ar-btn-action {
-      background: #10b981;
-      border: none;
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 8px;
       cursor: pointer;
-      margin-top: 10px;
-      transition: all 0.2s;
-    }
-    .ar-btn-action:hover { background: #059669; }
-
-    /* 3D Dynamic Interactive Hotspots */
-    .hotspot {
-      position: absolute;
-      z-index: 5;
-      pointer-events: auto;
-      cursor: pointer;
-      transform: translate(-50%, -50%);
-      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .hotspot:hover { transform: translate(-50%, -50%) scale(1.15); }
-    .hotspot-card {
-      background: rgba(15, 23, 42, 0.9);
-      backdrop-filter: blur(12px);
-      border: 2px solid #38bdf8;
-      color: #ffffff;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
       display: flex;
       align-items: center;
       gap: 6px;
-      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35);
-      white-space: nowrap;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      font-weight: 500;
+    }
+    .k-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .k-btn.active {
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
     }
 
-    /* Bottom Navigation Bar */
+    .ar-btn {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      border: 1px solid rgba(52, 211, 153, 0.5);
+      color: #ffffff;
+      font-size: 12px;
+      padding: 9px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      transition: all 0.2s;
+    }
+    .ar-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+    }
+
+    /* Bottom Control Bar */
     .bottom-bar {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
-    }
-    .camera-tabs {
       pointer-events: auto;
-      background: rgba(15, 23, 42, 0.88);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 6px 10px;
-      border-radius: 14px;
+    }
+
+    .camera-tabs {
       display: flex;
       gap: 6px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
+
     .cam-btn {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #cbd5e1;
-      padding: 7px 13px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 600;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 12px;
+      padding: 8px 14px;
+      border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
     }
-    .cam-btn:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+    .cam-btn:hover {
+      color: #f8fafc;
+      background: rgba(255, 255, 255, 0.08);
+    }
     .cam-btn.active {
-      background: #3b82f6;
-      border-color: #3b82f6;
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+      background: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 2px 10px rgba(37, 99, 235, 0.4);
     }
-  </style>
 
-  <!-- Offline Libraries with Fallback -->
-  <script src="./libs/three.min.js"></script>
-  <script src="./libs/OrbitControls.js"></script>
-  <script src="./libs/tween.umd.js"></script>
-  <script src="./libs/RoundedBoxGeometry.js"></script>
-  <script src="./libs/USDZExporter.js"></script>
-  <script src="./libs/GLTFExporter.js"></script>
+    .hint-chip {
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 7px 16px;
+      font-size: 12px;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 3D Hotspot Badges */
+    .hotspot {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform: translate(-50%, -50%);
+      pointer-events: auto;
+      cursor: pointer;
+      z-index: 20;
+      transition: opacity 0.3s;
+    }
+    .hotspot-pill {
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid #38bdf8;
+      color: #ffffff;
+      font-size: 11px;
+      padding: 5px 12px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.45);
+      font-weight: 600;
+      white-space: nowrap;
+      transition: transform 0.2s;
+    }
+    .hotspot-pill:hover {
+      transform: scale(1.08);
+      background: #0284c7;
+      border-color: #ffffff;
+    }
+    .hotspot.hidden {
+      display: none !important;
+    }
+
+    /* Side Detail Drawer */
+    .drawer-panel {
+      position: absolute;
+      top: 90px;
+      right: 20px;
+      width: 320px;
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      pointer-events: auto;
+      transform: translateX(360px);
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 30;
+    }
+    .drawer-panel.show {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .drawer-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .drawer-close {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .drawer-close:hover { color: #fff; }
+    .drawer-row { margin-bottom: 11px; }
+    .drawer-lbl { font-size: 11px; color: #94a3b8; margin-bottom: 2px; }
+    .drawer-val { font-size: 13px; color: #e2e8f0; font-weight: 500; }
+    .drawer-price { font-size: 18px; font-weight: 800; color: #10b981; }
+
+    /* Bin-Packing Analytics Panel */
+    .analytics-panel {
+      position: absolute;
+      top: 90px;
+      left: 20px;
+      width: 290px;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      pointer-events: auto;
+      z-index: 30;
+      display: none;
+    }
+    .analytics-panel.show { display: block; }
+    .ap-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #60a5fa;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .meter-box { margin-bottom: 12px; }
+    .meter-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: #cbd5e1; }
+    .meter-track { height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; }
+    .meter-fill { height: 100%; background: linear-gradient(90deg, #38bdf8, #3b82f6); border-radius: 3px; }
+
+    /* Modal for AR */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-card {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 28px;
+      width: 440px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+      text-align: center;
+    }
+    .modal-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .modal-desc { font-size: 13px; color: #94a3b8; line-height: 1.6; margin-bottom: 20px; }
+    .qr-placeholder {
+      background: #1e293b;
+      border: 2px dashed #38bdf8;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #38bdf8;
+    }
+    .ar-btn-action {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .ar-btn-action:hover { background: #1d4ed8; }
+  </style>
 </head>
 <body>
   <div id="canvas-container"></div>
 
-  <!-- HUD Interface Layer -->
+  <!-- HUD Layer -->
   <div class="hud-layer">
-    <!-- Top Header -->
-    <div class="header-bar">
-      <div class="header-info">
-        <h1>🏡 室内收纳动力学仿真与空间计算系统 <span class="tag-pill">Kinematics 机械级交互</span></h1>
-        <p>支持 3D 动力学开门/抽屉滑出/粮桶开盖 · 手机 1:1 实景 AR 投影 · 容积装箱率演算</p>
+    <div class="top-bar">
+      <div class="brand-badge">
+        <div class="brand-title">
+          🏡 室内收纳动力学仿真与空间计算系统
+          <span class="tag">Kinematics 机械级交互</span>
+        </div>
+        <div class="brand-sub">1:1 实景级 PBR 材质 · 动力学推拉 · 手机 AR QuickLook · 3D 运筹装箱率</div>
       </div>
 
-      <div class="header-controls">
-        <!-- Kinematics Live Controls -->
+      <div class="action-group">
         <div class="kinematics-bar">
           <button id="k-door" class="k-btn" onclick="toggleDoor()">🚪 开/关门测试</button>
           <button id="k-drawer" class="k-btn" onclick="toggleDrawer()">🛏️ 抽拉床底扁箱</button>
-          <button id="k-bucket" class="k-btn" onclick="toggleCatBucket()">🐱 粮桶开盖</button>
+          <button id="k-bucket" class="k-btn" onclick="toggleCatBucket()">🐱 翻开猫粮桶盖</button>
+          <button id="k-hotspots" class="k-btn active" onclick="toggleHotspots()">👁️ 标牌显示</button>
         </div>
-
-        <button id="btn-analytics" class="btn-tool" onclick="toggleAnalytics()">📊 容积装箱率</button>
-        <button id="btn-ar" class="btn-tool ar-btn" onclick="openARModal()">📱 手机 1:1 AR 投影</button>
+        <button class="k-btn" style="background:rgba(30,41,59,0.9);" onclick="toggleAnalytics()">📊 空间利用率</button>
+        <button class="ar-btn" onclick="openARModal()">📱 手机 1:1 AR 投影</button>
       </div>
     </div>
 
-    <!-- Analytics Panel (3D Bin-Packing & Space Utilization) -->
-    <div id="analyticsPanel" class="analytics-panel">
-      <div class="ap-title">
-        <span>📈 空间容积与 3D 装箱利用率</span>
-        <span style="cursor: pointer;" onclick="toggleAnalytics()">✕</span>
-      </div>
-      <div class="meter-block">
-        <div class="meter-label"><span>🛏️ 床底隐形暗舱 (可用容积 152L)</span><span>已用 85.5%</span></div>
-        <div class="meter-bar"><div class="meter-fill fill-blue" style="width: 85.5%;"></div></div>
-        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">消灭 4 个大号快递纸箱，容纳 2 床冬被 + 换季衣物</div>
-      </div>
-      <div class="meter-block">
-        <div class="meter-label"><span>🏸 墙面垂直装备区 (净占地 0㎡)</span><span>利用率 92.0%</span></div>
-        <div class="meter-bar"><div class="meter-fill fill-green" style="width: 92%;"></div></div>
-        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">2 支球拍悬空防压线，球包球筒垂直收拢</div>
-      </div>
-      <div class="meter-block">
-        <div class="meter-label"><span>💻 桌面零食死角 (原杂乱面 0.35㎡)</span><span>释放 72.4%</span></div>
-        <div class="meter-bar"><div class="meter-fill fill-amber" style="width: 72.4%;"></div></div>
-        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">袋装零食立式收纳，书桌净工作面提升至 0.85㎡</div>
-      </div>
-      <div style="font-size: 11px; color: #34d399; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px;">
-        ✨ 全屋地面净释放面积：<b>1.85 ㎡</b> (主走道通行净宽达到 85cm)
-      </div>
-    </div>
-
-    <!-- AR QuickLook Modal -->
-    <div id="arModal" class="ar-modal">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="font-size:16px; font-weight:700; color:#34d399;">📱 手机 1:1 实景 AR 空间投影</h3>
-        <span style="cursor:pointer; font-size:18px; color:#94a3b8;" onclick="closeARModal()">✕</span>
-      </div>
-      <p style="font-size:12px; color:#94a3b8; margin-top:6px;">
-        用手机相机对准你的真实房间地面，虚拟收纳件将以 <b>1:1 真实尺寸</b> 浮现在你眼前！
-      </p>
-
-      <div class="ar-qr">
-        <!-- Inline SVG QR Code pointing to local mobile access -->
-        <svg viewBox="0 0 256 256" width="100%" height="100%">
-          <rect width="256" height="256" fill="#ffffff"/>
-          <path d="M20,20 h60 v60 h-60 z M30,30 v40 h40 v-40 z M42,42 h16 v16 h-16 z" fill="#0f172a"/>
-          <path d="M176,20 h60 v60 h-60 z M186,30 v40 h40 v-40 z M198,42 h16 v16 h-16 z" fill="#0f172a"/>
-          <path d="M20,176 h60 v60 h-60 z M30,186 v40 h40 v-40 z M42,198 h16 v16 h-16 z" fill="#0f172a"/>
-          <rect x="96" y="24" width="16" height="40" fill="#0f172a"/>
-          <rect x="124" y="32" width="24" height="16" fill="#0f172a"/>
-          <rect x="100" y="90" width="56" height="16" fill="#0f172a"/>
-          <rect x="24" y="96" width="36" height="16" fill="#0f172a"/>
-          <rect x="176" y="96" width="48" height="16" fill="#0f172a"/>
-          <rect x="96" y="140" width="20" height="40" fill="#0f172a"/>
-          <rect x="130" y="140" width="40" height="20" fill="#0f172a"/>
-          <rect x="180" y="160" width="40" height="30" fill="#0f172a"/>
-          <rect x="100" y="200" width="60" height="24" fill="#0f172a"/>
-        </svg>
-      </div>
-
-      <div style="font-size:12px; color:#cbd5e1;">
-        手机浏览器输入局域网直达：<br>
-        <span style="color:#60a5fa; font-family:monospace; font-weight:700;">http://192.168.5.55:8080/room_pro_design_3d.html</span>
-      </div>
-
-      <button class="ar-btn-action" onclick="exportUSDZ()">
-        🍏 导出 iOS 原生 AR 格式 (.usdz)
-      </button>
-    </div>
-
-    <!-- Side Detail Drawer -->
-    <div id="drawer" class="drawer-panel">
-      <div class="drawer-header">
-        <div id="d-title" class="drawer-title">📦 收纳选品详情</div>
-        <button class="drawer-close" onclick="closeDrawer()">✕</button>
-      </div>
-      <div class="drawer-row">
-        <div class="d-label">物理安装位置 / 净空条件</div>
-        <div id="d-loc" class="d-val">-</div>
-      </div>
-      <div class="drawer-row">
-        <div class="d-label">容纳物品</div>
-        <div id="d-items" class="d-val">-</div>
-      </div>
-      <div class="drawer-row">
-        <div class="d-label">免打孔/微孔工法与动力学特性</div>
-        <div id="d-solution" class="d-val">-</div>
-      </div>
-      <div class="drawer-row">
-        <div class="d-label">精确尺寸与公差余量</div>
-        <div id="d-specs" class="d-val" style="color: #60a5fa; font-weight:600;">-</div>
-      </div>
-      <div class="drawer-row" style="display:flex; justify-content:space-between; align-items:center;">
-        <span class="d-label">参考单价</span>
-        <span id="d-price" class="d-highlight">¥0</span>
-      </div>
-      <div class="drawer-row">
-        <div class="d-label">电商搜索关键词</div>
-        <div id="d-kw" class="d-code">-</div>
-      </div>
-      <div id="d-tip" class="d-tip">
-        💡 租房与养猫铁律：尺寸比实测小 3~5cm，推拉绝不卡住！
-      </div>
-    </div>
-
-    <!-- Bottom Camera Navigation -->
     <div class="bottom-bar">
       <div class="camera-tabs">
-        <button class="cam-btn active" onclick="setCam('iso')">🌐 3D 轴测全景</button>
+        <button class="cam-btn active" onclick="setCam('iso')">🏠 空间全景</button>
         <button class="cam-btn" onclick="setCam('racket')">🏸 球拍高位壁挂</button>
         <button class="cam-btn" onclick="setCam('bed')">🛏️ 床底抽拉扁箱</button>
-        <button class="cam-btn" onclick="setCam('desk')">💻 书桌零食立放</button>
-        <button class="cam-btn" onclick="setCam('cat')">🐱 猫咪餐饮与粮桶</button>
+        <button class="cam-btn" onclick="setCam('desk')">🖥️ 书桌零食立放</button>
+        <button class="cam-btn" onclick="setCam('cat')">🐱 猫咪餐饮与储粮</button>
         <button class="cam-btn" onclick="setCam('top')">📐 顶视动线 (85cm)</button>
       </div>
 
-      <div style="background: rgba(15, 23, 42, 0.85); padding: 8px 16px; border-radius: 20px; font-size: 11px; color: #94a3b8; border: 1px solid rgba(255,255,255,0.08);">
-        💡 点击 3D 场景中的门扇/扁箱/粮桶可直接触发<b>机械运动动画</b>
+      <div class="hint-chip">
+        <span>💡 场景中的门扇/床底箱/猫粮桶支持直接鼠标点击触发机械动画</span>
       </div>
     </div>
   </div>
 
-  <!-- 3D Hotspot Screen Projection Layer -->
-  <div id="hotspot-layer"></div>
+  <!-- Bin-Packing Analytics Panel -->
+  <div id="analytics-panel" class="analytics-panel">
+    <div class="ap-title">
+      <span>📦 3D 空间装箱运筹分析</span>
+      <span style="font-size:11px; color:#38bdf8;">GB 50096 达标</span>
+    </div>
+    <div class="meter-box">
+      <div class="meter-label"><span>空间死角消除率</span><span style="color:#38bdf8; font-weight:700;">94.2%</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:94.2%;"></div></div>
+    </div>
+    <div class="meter-box">
+      <div class="meter-label"><span>床底暗容积释放</span><span style="color:#10b981; font-weight:700;">0.44 m³</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:88%; background:#10b981;"></div></div>
+    </div>
+    <div class="meter-box">
+      <div class="meter-label"><span>门后垂直立面收纳</span><span style="color:#f59e0b; font-weight:700;">0.32 m³</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:76%; background:#f59e0b;"></div></div>
+    </div>
+    <div class="meter-box">
+      <div class="meter-label"><span>主行动线净宽</span><span style="color:#a855f7; font-weight:700;">88 cm (合规)</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:100%; background:#a855f7;"></div></div>
+    </div>
+    <div class="meter-box" style="margin-bottom:0;">
+      <div class="meter-label"><span>猫咪地面安全活动区</span><span style="color:#ec4899; font-weight:700;">72%</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:72%; background:#ec4899;"></div></div>
+    </div>
+  </div>
 
+  <!-- AR Modal -->
+  <div id="ar-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div class="modal-title">📱 手机 1:1 AR 空间实景透视</div>
+        <button style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;" onclick="closeARModal()">✕</button>
+      </div>
+      <div class="modal-desc">
+        利用 Apple ARKit / WebXR 空间锚定，直接在你的 iPhone/iPad 上把 1:1 虚拟收纳箱投射到你现在的床边与门后，实测物理间隙！
+      </div>
+      <div class="qr-placeholder">
+        <div style="font-size:24px; margin-bottom:8px;">📲</div>
+        <div>同 WiFi 手机浏览器访问：</div>
+        <div style="font-weight:700; font-size:15px; margin-top:4px; color:#fff;">http://192.168.5.55:8080/room_pro_design_3d.html</div>
+      </div>
+      <button class="ar-btn-action" onclick="exportUSDZ()">⬇️ 直接导出 Apple AR 格式 (.usdz)</button>
+    </div>
+  </div>
+
+  <!-- Detail Drawer -->
+  <div id="drawer" class="drawer-panel">
+    <div class="drawer-header">
+      <div id="d-title" class="drawer-title">📦 收纳选品详情</div>
+      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div class="drawer-row">
+      <div class="drawer-lbl">收纳品类与位置</div>
+      <div id="d-pos" class="drawer-val">门背立面 / 高位双拍架</div>
+    </div>
+    <div class="drawer-row">
+      <div class="drawer-lbl">工程物理规格 (长x宽x高)</div>
+      <div id="d-size" class="drawer-val">360mm x 120mm x 30mm</div>
+    </div>
+    <div class="drawer-row">
+      <div class="drawer-lbl">猫咪防破坏设计</div>
+      <div id="d-cat" class="drawer-val">挂高 1.8m 超出猫极限弹跳抓咬区</div>
+    </div>
+    <div class="drawer-row">
+      <div class="drawer-lbl">选品材质与安装</div>
+      <div id="d-mat" class="drawer-val">加厚航空铝合金 / 免打孔无痕胶</div>
+    </div>
+    <div class="drawer-row" style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.1);">
+      <div>
+        <div class="drawer-lbl">预估单件采购价</div>
+        <div id="d-price" class="drawer-price">¥48.00</div>
+      </div>
+      <button style="background:#2563eb; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:600; font-size:12px; cursor:pointer;" onclick="alert('已加入智能采购清单')">加入采购单</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="./libs/three.min.js"></script>
+  <script src="./libs/OrbitControls.js"></script>
+  <script src="./libs/RoundedBoxGeometry.js"></script>
+  <script src="./libs/tween.umd.js"></script>
+  <script src="./libs/USDZExporter.js"></script>
   <script>
-    // --- 1. Procedural High-Res Audio Synthesis (Zero Asset Dependency!) ---
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    // --- 1. Synthesized Web Audio Sound Effects ---
     let audioCtx = null;
     function getAudio() {
-      if (!audioCtx) audioCtx = new AudioContext();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
       return audioCtx;
     }
 
-    // Sound A: Crisp Mechanical Latch Click
     function playClickSound() {
       try {
         const ctx = getAudio();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(1200, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.04);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start();
-        osc.stop(ctx.currentTime + 0.04);
+        osc.stop(ctx.currentTime + 0.08);
       } catch (e) {}
     }
 
-    // Sound B: Damped Smooth Wheel Glide (Drawer Pull)
     function playGlideSound() {
       try {
         const ctx = getAudio();
-        const bufferSize = ctx.sampleRate * 0.3;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const bufSize = ctx.sampleRate * 0.35;
+        const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        for (let i = 0; i < bufSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufSize * 0.4));
+        }
         const noise = ctx.createBufferSource();
         noise.buffer = buffer;
         const filter = ctx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.value = 450;
-        filter.Q.value = 3.0;
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(650, ctx.currentTime);
         const gain = ctx.createGain();
         gain.gain.setValueAtTime(0.18, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
         noise.connect(filter);
         filter.connect(gain);
         gain.connect(ctx.destination);
@@ -543,24 +542,24 @@
       } catch (e) {}
     }
 
-    // --- 2. Procedural High-Res PBR Textures Generator ---
+    // --- 2. Procedural Textures ---
     function createTileTextures() {
       const canvas = document.createElement('canvas');
       canvas.width = 1024; canvas.height = 1024;
       const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#ded9d0';
+      ctx.fillStyle = '#eae5dc';
       ctx.fillRect(0, 0, 1024, 1024);
 
       const imgData = ctx.getImageData(0, 0, 1024, 1024);
       for (let i = 0; i < imgData.data.length; i += 4) {
-        const n = (Math.random() - 0.5) * 12;
+        const n = (Math.random() - 0.5) * 14;
         imgData.data[i] = Math.min(255, Math.max(0, imgData.data[i] + n));
         imgData.data[i+1] = Math.min(255, Math.max(0, imgData.data[i+1] + n));
         imgData.data[i+2] = Math.min(255, Math.max(0, imgData.data[i+2] + n));
       }
       ctx.putImageData(imgData, 0, 0);
 
-      ctx.strokeStyle = '#a39888';
+      ctx.strokeStyle = '#b8ad9e';
       ctx.lineWidth = 4;
       for (let i = 0; i <= 1024; i += 256) {
         ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 1024); ctx.stroke();
@@ -576,11 +575,11 @@
       const canvas = document.createElement('canvas');
       canvas.width = 512; canvas.height = 512;
       const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#b58c5c';
+      ctx.fillStyle = '#b89063';
       ctx.fillRect(0, 0, 512, 512);
-      for (let i = 0; i < 50; i++) {
-        ctx.fillStyle = 'rgba(110, 75, 35, ' + (0.05 + Math.random() * 0.15) + ')';
-        ctx.fillRect(0, Math.random() * 512, 512, 2 + Math.random() * 8);
+      for (let i = 0; i < 40; i++) {
+        ctx.fillStyle = 'rgba(110, 72, 32, ' + (0.05 + Math.random() * 0.12) + ')';
+        ctx.fillRect(0, Math.random() * 512, 512, 2 + Math.random() * 6);
       }
       const tex = new THREE.CanvasTexture(canvas);
       tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
@@ -592,8 +591,8 @@
       canvas.width = 256; canvas.height = 256;
       const ctx = canvas.getContext('2d');
       const grad = ctx.createRadialGradient(128, 128, 10, 128, 128, 120);
-      grad.addColorStop(0, 'rgba(0,0,0,0.7)');
-      grad.addColorStop(0.3, 'rgba(0,0,0,0.35)');
+      grad.addColorStop(0, 'rgba(0,0,0,0.65)');
+      grad.addColorStop(0.35, 'rgba(0,0,0,0.3)');
       grad.addColorStop(0.7, 'rgba(0,0,0,0.08)');
       grad.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = grad;
@@ -602,7 +601,7 @@
     }
 
     const shadowTex = createRadialShadowTexture();
-    function addContactShadow(parent, w, d, x, z, opacity = 0.8) {
+    function addContactShadow(parent, w, d, x, z, opacity = 0.75) {
       const plane = new THREE.Mesh(
         new THREE.PlaneGeometry(w, d),
         new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity: opacity, depthWrite: false })
@@ -615,10 +614,10 @@
     // --- 3. Scene, Camera, Renderer ---
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0c12);
+    scene.background = new THREE.Color(0x0a0d14);
 
     const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(8.5, 9, 8.5);
+    camera.position.set(4.6, 5.2, 5.2);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -632,142 +631,227 @@
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.maxPolarAngle = Math.PI / 2 - 0.04;
-    controls.minDistance = 2.5;
-    controls.maxDistance = 22;
-    controls.target.set(0, 1.1, 0);
+    controls.maxPolarAngle = Math.PI / 2 - 0.05;
+    controls.minDistance = 2.0;
+    controls.maxDistance = 16;
+    controls.target.set(0, 0.75, 0);
 
     // --- 4. Lighting ---
-    const ambLight = new THREE.AmbientLight(0xfff7ed, 0.7);
+    const ambLight = new THREE.AmbientLight(0xfff7ed, 0.75);
     scene.add(ambLight);
 
-    const sunLight = new THREE.DirectionalLight(0xfff5e6, 1.4);
-    sunLight.position.set(-6, 8, 4.5);
+    // Sunlight shining in through the North wall window
+    const sunLight = new THREE.DirectionalLight(0xfff3e0, 1.5);
+    sunLight.position.set(2.5, 7.0, -5.5);
+    sunLight.target.position.set(0, 0.5, 0);
+    scene.add(sunLight.target);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 2048;
     sunLight.shadow.mapSize.height = 2048;
     sunLight.shadow.camera.near = 0.5;
     sunLight.shadow.camera.far = 25;
-    sunLight.shadow.camera.left = -5;
-    sunLight.shadow.camera.right = 5;
-    sunLight.shadow.camera.top = 5;
-    sunLight.shadow.camera.bottom = -5;
+    sunLight.shadow.camera.left = -4;
+    sunLight.shadow.camera.right = 4;
+    sunLight.shadow.camera.top = 4;
+    sunLight.shadow.camera.bottom = -4;
     sunLight.shadow.bias = -0.0003;
     scene.add(sunLight);
 
-    const deskPendantLight = new THREE.PointLight(0xffaa44, 0.9, 6);
-    deskPendantLight.position.set(-1.1, 2.1, 0.2);
-    deskPendantLight.castShadow = true;
-    scene.add(deskPendantLight);
+    // Warm desk pendant light
+    const deskLight = new THREE.PointLight(0xffb050, 0.9, 5);
+    deskLight.position.set(-1.1, 1.8, 0.3);
+    deskLight.castShadow = true;
+    scene.add(deskLight);
 
-    // --- 5. Room Architectural Envelope (3.4m x 4.6m Scale) ---
+    // --- 5. Room Architectural Envelope (Cutaway 3.4m x 4.6m) ---
     const roomGroup = new THREE.Group();
 
-    // Floor
+    // Floor (3.6m W x 4.8m D)
     const floorTileTex = createTileTextures();
     const floorMesh = new THREE.Mesh(
-      new THREE.BoxGeometry(3.6, 0.2, 4.8),
+      new THREE.BoxGeometry(3.6, 0.16, 4.8),
       new THREE.MeshStandardMaterial({ map: floorTileTex, roughness: 0.35, metalness: 0.05 })
     );
-    floorMesh.position.set(0, -0.1, 0);
+    floorMesh.position.set(0, -0.08, 0);
     floorMesh.receiveShadow = true;
     roomGroup.add(floorMesh);
 
+    // Low cross-section architectural rim for cutaway feel
+    const curbMat = new THREE.MeshStandardMaterial({ color: 0x2d3748, roughness: 0.8 });
+    const curbS = new THREE.Mesh(new THREE.BoxGeometry(3.64, 0.06, 0.04), curbMat);
+    curbS.position.set(0, 0.03, 2.4);
+    roomGroup.add(curbS);
+
     // Walls
     const wallMat = new THREE.MeshStandardMaterial({ color: 0xf5f3ee, roughness: 0.95 });
-    const northWall = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.8, 0.16), wallMat);
-    northWall.position.set(0, 1.4, -2.48);
-    northWall.receiveShadow = true;
-    roomGroup.add(northWall);
+    const skirtingMat = new THREE.MeshStandardMaterial({ color: 0x483c32, roughness: 0.7 });
 
-    const eastWall = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.8, 4.8), wallMat);
-    eastWall.position.set(1.88, 1.4, 0);
+    // East Wall (Right Wall: X = +1.8)
+    const eastWall = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.6, 4.8), wallMat);
+    eastWall.position.set(1.8, 1.3, 0);
     eastWall.receiveShadow = true;
     roomGroup.add(eastWall);
 
-    const westWall = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.8, 2.2), wallMat);
-    westWall.position.set(-1.88, 1.4, 1.3);
-    westWall.receiveShadow = true;
-    roomGroup.add(westWall);
-
-    // Skirting Board (10cm H x 1.5cm D)
-    const skirtingMat = new THREE.MeshStandardMaterial({ color: 0x423832, roughness: 0.7 });
-    const skirtN = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.1, 0.02), skirtingMat);
-    skirtN.position.set(0, 0.05, -2.39);
-    roomGroup.add(skirtN);
     const skirtE = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.1, 4.8), skirtingMat);
-    skirtE.position.set(1.79, 0.05, 0);
+    skirtE.position.set(1.71, 0.05, 0);
     roomGroup.add(skirtE);
-    const skirtW = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.1, 2.2), skirtingMat);
-    skirtW.position.set(-1.79, 0.05, 1.3);
+
+    // West Wall (Left Wall: X = -1.8, has door opening at Z = -2.1 to -1.2)
+    // Front section of west wall (Z = -1.2 to +2.4)
+    const westWallFront = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.6, 3.6), wallMat);
+    westWallFront.position.set(-1.8, 1.3, 0.6);
+    westWallFront.receiveShadow = true;
+    roomGroup.add(westWallFront);
+
+    // Lintel above door (Z = -2.1 to -1.2, Y = 2.1 to 2.6)
+    const doorLintel = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.5, 0.9), wallMat);
+    doorLintel.position.set(-1.8, 2.35, -1.65);
+    doorLintel.receiveShadow = true;
+    roomGroup.add(doorLintel);
+
+    // Corner pillar behind door (Z = -2.4 to -2.1)
+    const westCorner = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.6, 0.3), wallMat);
+    westCorner.position.set(-1.8, 1.3, -2.25);
+    westCorner.receiveShadow = true;
+    roomGroup.add(westCorner);
+
+    const skirtW = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.1, 3.6), skirtingMat);
+    skirtW.position.set(-1.71, 0.05, 0.6);
     roomGroup.add(skirtW);
 
-    // Dynamic Kinematic Door (Hinge Axis Pivot at X: -1.88, Z: -2.1)
-    const doorHingeGroup = new THREE.Group();
-    doorHingeGroup.position.set(-1.88, 0, -2.1);
+    // North Wall with Window (Z = -2.4)
+    // Left piece (X = -1.8 to -0.4, width 1.4m)
+    const northLeft = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.6, 0.16), wallMat);
+    northLeft.position.set(-1.1, 1.3, -2.4);
+    northLeft.receiveShadow = true;
+    roomGroup.add(northLeft);
 
-    const architrave = new THREE.Mesh(
-      new THREE.BoxGeometry(0.12, 2.18, 1.04),
-      new THREE.MeshStandardMaterial({ color: 0x3d322a })
-    );
-    architrave.position.set(0, 1.09, 0.45);
-    roomGroup.add(architrave); // Frame stays static
+    // Under-window sill wall (X = -0.4 to 1.4, width 1.8m, height 0.85m)
+    const northBottom = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.85, 0.16), wallMat);
+    northBottom.position.set(0.5, 0.425, -2.4);
+    northBottom.receiveShadow = true;
+    roomGroup.add(northBottom);
 
-    const doorLeaf = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(0.05, 2.1, 0.9, 4, 0.01),
-      new THREE.MeshStandardMaterial({ color: 0x5a4638, roughness: 0.6 })
-    );
-    doorLeaf.position.set(0, 1.05, 0.45);
-    doorLeaf.castShadow = true;
-    doorHingeGroup.add(doorLeaf);
+    // Lintel above window (X = -0.4 to 1.4, width 1.8m, height 0.45m, Y = 2.15 to 2.6)
+    const northTop = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.45, 0.16), wallMat);
+    northTop.position.set(0.5, 2.375, -2.4);
+    northTop.receiveShadow = true;
+    roomGroup.add(northTop);
 
-    // Brass Lever Handle
-    const brassMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85, roughness: 0.25 });
-    const handlePlate = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.24, 0.06), brassMat);
-    handlePlate.position.set(0.03, 1.0, 0.82);
-    doorHingeGroup.add(handlePlate);
-    const handleLever = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.12), brassMat);
-    handleLever.rotation.z = Math.PI / 2;
-    handleLever.position.set(0.06, 1.02, 0.82);
-    doorHingeGroup.add(handleLever);
+    // Right piece of North wall (X = 1.4 to 1.8, width 0.4m)
+    const northRight = new THREE.Mesh(new THREE.BoxGeometry(0.4, 2.6, 0.16), wallMat);
+    northRight.position.set(1.6, 1.3, -2.4);
+    northRight.receiveShadow = true;
+    roomGroup.add(northRight);
 
-    roomGroup.add(doorHingeGroup);
+    // Skirting on North wall
+    const skirtNL = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.1, 0.02), skirtingMat);
+    skirtNL.position.set(-1.1, 0.05, -2.31);
+    roomGroup.add(skirtNL);
+    const skirtNB = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.1, 0.02), skirtingMat);
+    skirtNB.position.set(0.5, 0.05, -2.31);
+    roomGroup.add(skirtNB);
 
-    // Window with Slatted Venetian Blinds
+    // --- ARCHITECTURAL WINDOW (On North Wall) ---
     const windowGroup = new THREE.Group();
-    const windowFrame = new THREE.Mesh(
-      new THREE.BoxGeometry(2.0, 2.2, 0.12),
-      new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.7, roughness: 0.3 })
-    );
-    windowFrame.position.set(0.7, 1.5, 2.48);
-    windowGroup.add(windowFrame);
+    windowGroup.position.set(0.5, 0.85, -2.4);
 
-    const windowSill = new THREE.Mesh(
-      new THREE.BoxGeometry(2.1, 0.04, 0.24),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })
-    );
-    windowSill.position.set(0.7, 0.4, 2.42);
-    windowGroup.add(windowSill);
+    // Marble Sill (projecting into room)
+    const sillMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25 });
+    const winSill = new THREE.Mesh(new THREE.RoundedBoxGeometry(1.88, 0.04, 0.24, 3, 0.01), sillMat);
+    winSill.position.set(0, 0.02, 0.08);
+    winSill.castShadow = true;
+    windowGroup.add(winSill);
 
-    const windowGlass = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.85, 2.05),
-      new THREE.MeshPhysicalMaterial({ color: 0x93c5fd, transmission: 0.92, opacity: 0.7, transparent: true })
-    );
-    windowGlass.position.set(0.7, 1.5, 2.45);
-    windowGroup.add(windowGlass);
+    // Window Frame (thin slate-gray aluminium border)
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.7, roughness: 0.3 });
+    // Top border
+    const frTop = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.05, 0.08), frameMat);
+    frTop.position.set(0, 1.28, 0);
+    windowGroup.add(frTop);
+    // Left border
+    const frL = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.26, 0.08), frameMat);
+    frL.position.set(-0.88, 0.65, 0);
+    windowGroup.add(frL);
+    // Right border
+    const frR = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.26, 0.08), frameMat);
+    frR.position.set(0.88, 0.65, 0);
+    windowGroup.add(frR);
+    // Center Mullion
+    const frMid = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.26, 0.08), frameMat);
+    frMid.position.set(0, 0.65, 0);
+    windowGroup.add(frMid);
 
-    for (let b = 0; b < 22; b++) {
+    // Glass with sky gradient feel
+    const glassMat = new THREE.MeshPhysicalMaterial({
+      color: 0xbfdbfe,
+      transmission: 0.9,
+      opacity: 0.6,
+      transparent: true,
+      roughness: 0.1
+    });
+    const winGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.72, 1.22), glassMat);
+    winGlass.position.set(0, 0.65, 0.01);
+    windowGroup.add(winGlass);
+
+    // Potted Green Succulent on Window Sill
+    const plantGroup = new THREE.Group();
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.045, 0.09, 16), new THREE.MeshStandardMaterial({ color: 0xf1f5f9 }));
+    pot.position.set(0.65, 0.085, 0.08);
+    pot.castShadow = true;
+    plantGroup.add(pot);
+    const plantMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.6 });
+    for (let p = 0; p < 6; p++) {
+      const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.1, 8), plantMat);
+      leaf.rotation.z = 0.3 * Math.sin(p * 1.05);
+      leaf.rotation.x = 0.3 * Math.cos(p * 1.05);
+      leaf.position.set(0.65 + 0.02 * Math.sin(p), 0.14, 0.08 + 0.02 * Math.cos(p));
+      plantGroup.add(leaf);
+    }
+    windowGroup.add(plantGroup);
+
+    // Venetian Blinds Slats (slanted to cast sunlight striping)
+    for (let s = 0; s < 14; s++) {
       const slat = new THREE.Mesh(
-        new THREE.BoxGeometry(1.82, 0.003, 0.05),
-        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 })
+        new THREE.BoxGeometry(1.72, 0.003, 0.04),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 })
       );
-      slat.rotation.x = 0.2;
-      slat.position.set(0.7, 0.5 + b * 0.09, 2.4);
+      slat.rotation.x = 0.28;
+      slat.position.set(0, 0.1 + s * 0.085, 0.05);
       slat.castShadow = true;
       windowGroup.add(slat);
     }
     roomGroup.add(windowGroup);
 
+    // --- DYNAMIC KINEMATIC ENTRANCE DOOR ---
+    const doorHingeGroup = new THREE.Group();
+    doorHingeGroup.position.set(-1.72, 0, -2.1); // Hinge pivot axis
+
+    const doorArchitrave = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, 2.14, 0.94),
+      new THREE.MeshStandardMaterial({ color: 0x3d3027 })
+    );
+    doorArchitrave.position.set(-1.75, 1.07, -1.65);
+    roomGroup.add(doorArchitrave);
+
+    // Door Leaf
+    const doorLeafMat = new THREE.MeshStandardMaterial({ color: 0x5a4436, roughness: 0.65 });
+    const doorLeaf = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.045, 2.08, 0.88, 4, 0.01), doorLeafMat);
+    doorLeaf.position.set(0, 1.04, 0.44);
+    doorLeaf.castShadow = true;
+    doorHingeGroup.add(doorLeaf);
+
+    // Brass Lever Handle
+    const brassMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85, roughness: 0.25 });
+    const hPlate = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.22, 0.05), brassMat);
+    hPlate.position.set(0.03, 1.0, 0.8);
+    doorHingeGroup.add(hPlate);
+    const hLever = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.11), brassMat);
+    hLever.rotation.z = Math.PI / 2;
+    hLever.position.set(0.06, 1.02, 0.8);
+    doorHingeGroup.add(hLever);
+
+    roomGroup.add(doorHingeGroup);
     scene.add(roomGroup);
 
     // --- 6. Furniture ---
@@ -776,181 +860,288 @@
     const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.55 });
     const steelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.25 });
 
-    // Bed
+    // --- BED (1.5m x 2.0m, Height 0.5m) ---
     const bedGroup = new THREE.Group();
-    const headboard = new THREE.Mesh(new THREE.RoundedBoxGeometry(1.62, 0.95, 0.09, 4, 0.02), woodMat);
-    headboard.position.set(0, 0.475, -1.02);
+    const headboard = new THREE.Mesh(new THREE.RoundedBoxGeometry(1.58, 0.9, 0.08, 4, 0.02), woodMat);
+    headboard.position.set(0, 0.45, -0.98);
     headboard.castShadow = true;
     bedGroup.add(headboard);
 
     const headCushion = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(1.48, 0.65, 0.04, 4, 0.02),
+      new THREE.RoundedBoxGeometry(1.44, 0.6, 0.04, 4, 0.02),
       new THREE.MeshStandardMaterial({ color: 0xe2dcd5, roughness: 0.9 })
     );
-    headCushion.position.set(0, 0.55, -0.96);
+    headCushion.position.set(0, 0.52, -0.92);
     bedGroup.add(headCushion);
 
-    const bedBase = new THREE.Mesh(new THREE.RoundedBoxGeometry(1.56, 0.16, 2.06, 4, 0.02), woodMat);
+    const bedBase = new THREE.Mesh(new THREE.RoundedBoxGeometry(1.52, 0.16, 2.02, 4, 0.02), woodMat);
     bedBase.position.set(0, 0.26, 0);
     bedBase.castShadow = true;
     bedGroup.add(bedBase);
 
-    [[-0.72, -0.96], [0.72, -0.96], [-0.72, 0.96], [0.72, 0.96]].forEach(([lx, lz]) => {
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.035, 0.22, 16), woodMat);
+    // Bed Legs (22cm clearance)
+    [[-0.7, -0.95], [0.7, -0.95], [-0.7, 0.95], [0.7, 0.95]].forEach(([lx, lz]) => {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.032, 0.22, 16), woodMat);
       leg.position.set(lx, 0.11, lz);
       leg.castShadow = true;
       bedGroup.add(leg);
     });
 
+    // Mattress with piping
     const mattress = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(1.5, 0.24, 2.0, 5, 0.03),
+      new THREE.RoundedBoxGeometry(1.48, 0.22, 1.96, 5, 0.03),
       new THREE.MeshStandardMaterial({ color: 0xfcfcfc, roughness: 0.95 })
     );
-    mattress.position.set(0, 0.46, 0);
+    mattress.position.set(0, 0.45, 0);
     mattress.castShadow = true;
     bedGroup.add(mattress);
 
+    // Cozy Layered Duvet Cover
     const duvet = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(1.53, 0.15, 1.4, 5, 0.035),
-      new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.85 })
+      new THREE.RoundedBoxGeometry(1.5, 0.14, 1.35, 5, 0.035),
+      new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85 })
     );
-    duvet.position.set(0, 0.58, 0.3);
+    duvet.position.set(0, 0.56, 0.3);
     duvet.castShadow = true;
     bedGroup.add(duvet);
 
-    [-0.38, 0.38].forEach(px => {
+    // Pillows
+    [-0.36, 0.36].forEach((px, i) => {
       const pillow = new THREE.Mesh(
-        new THREE.RoundedBoxGeometry(0.58, 0.13, 0.42, 5, 0.04),
+        new THREE.RoundedBoxGeometry(0.54, 0.12, 0.4, 5, 0.04),
         new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 })
       );
-      pillow.position.set(px, 0.63, -0.68);
+      pillow.rotation.y = (i === 0 ? -0.05 : 0.05);
+      pillow.position.set(px, 0.61, -0.66);
       pillow.castShadow = true;
       bedGroup.add(pillow);
     });
 
-    addContactShadow(bedGroup, 1.7, 2.2, 0, 0, 0.75);
-    bedGroup.position.set(0.95, 0, -1.25);
+    addContactShadow(bedGroup, 1.65, 2.15, 0, 0, 0.7);
+    bedGroup.position.set(0.9, 0, -1.2);
     furnitureGroup.add(bedGroup);
 
-    // Desk Setup
+    // --- STUDY DESK (1.2m x 0.6m) ---
     const deskGroup = new THREE.Group();
-    const deskTop = new THREE.Mesh(new THREE.RoundedBoxGeometry(1.2, 0.04, 0.6, 4, 0.01), woodMat);
+    const deskTop = new THREE.Mesh(new THREE.RoundedBoxGeometry(1.2, 0.04, 0.6, 4, 0.012), woodMat);
     deskTop.position.set(0, 0.75, 0);
     deskTop.castShadow = true;
     deskGroup.add(deskTop);
 
     [[-0.55, -0.25], [0.55, -0.25], [-0.55, 0.25], [0.55, 0.25]].forEach(([dx, dz]) => {
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.73, 0.04), steelMat);
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.73, 0.038), steelMat);
       leg.position.set(dx, 0.365, dz);
       leg.castShadow = true;
       deskGroup.add(leg);
     });
 
+    // Monitor with illuminated screen
     const monScreen = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(0.64, 0.38, 0.02, 3, 0.005),
+      new THREE.RoundedBoxGeometry(0.62, 0.36, 0.02, 3, 0.005),
       new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1 })
     );
-    monScreen.position.set(0, 1.08, -0.16);
+    monScreen.position.set(0, 1.05, -0.16);
     monScreen.castShadow = true;
     deskGroup.add(monScreen);
 
-    // Chair
+    const monGlow = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.58, 0.32),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, opacity: 0.85, transparent: true })
+    );
+    monGlow.position.set(0, 1.05, -0.149);
+    deskGroup.add(monGlow);
+
+    const monStand = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.16), steelMat);
+    monStand.position.set(0, 0.85, -0.16);
+    deskGroup.add(monStand);
+
+    // Keyboard & Mouse
+    const kb = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.01, 0.12), new THREE.MeshStandardMaterial({ color: 0x334155 }));
+    kb.position.set(0, 0.775, 0.05);
+    deskGroup.add(kb);
+
+    const mouse = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.06, 0.02, 0.09, 3, 0.01), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+    mouse.position.set(0.25, 0.78, 0.05);
+    deskGroup.add(mouse);
+
+    // Coffee Mug
+    const mug = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.08, 16), new THREE.MeshStandardMaterial({ color: 0xf8fafc }));
+    mug.position.set(-0.42, 0.81, 0.12);
+    deskGroup.add(mug);
+
+    // Desk Lamp
+    const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.015, 16), steelMat);
+    lampBase.position.set(-0.46, 0.778, -0.18);
+    deskGroup.add(lampBase);
+    const lampStem = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.35), steelMat);
+    lampStem.position.set(-0.46, 0.95, -0.18);
+    deskGroup.add(lampStem);
+    const lampShade = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.09, 16), new THREE.MeshStandardMaterial({ color: 0xf59e0b }));
+    lampShade.rotation.x = 0.5;
+    lampShade.position.set(-0.46, 1.12, -0.12);
+    deskGroup.add(lampShade);
+
+    addContactShadow(deskGroup, 1.3, 0.7, 0, 0, 0.65);
+    deskGroup.position.set(-1.1, 0, 0.4);
+    furnitureGroup.add(deskGroup);
+
+    // --- ERGONOMIC CHAIR ---
     const chairGroup = new THREE.Group();
     const seatCushion = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(0.48, 0.07, 0.48, 4, 0.02),
+      new THREE.RoundedBoxGeometry(0.46, 0.06, 0.46, 4, 0.02),
       new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 })
     );
     seatCushion.position.set(0, 0.45, 0);
     chairGroup.add(seatCushion);
 
     const backrest = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(0.45, 0.48, 0.03, 4, 0.02),
+      new THREE.RoundedBoxGeometry(0.42, 0.46, 0.03, 4, 0.02),
       new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 })
     );
-    backrest.position.set(0, 0.72, 0.23);
+    backrest.position.set(0, 0.72, 0.22);
     chairGroup.add(backrest);
 
-    addContactShadow(chairGroup, 0.6, 0.6, 0, 0, 0.6);
-    chairGroup.position.set(-1.1, 0, 0.75);
+    const chairPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.38), steelMat);
+    chairPillar.position.set(0, 0.23, 0);
+    chairGroup.add(chairPillar);
+
+    for (let c = 0; c < 5; c++) {
+      const starLeg = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.24), steelMat);
+      starLeg.rotation.y = c * (Math.PI * 2 / 5);
+      starLeg.position.set(0.1 * Math.sin(starLeg.rotation.y), 0.05, 0.1 * Math.cos(starLeg.rotation.y));
+      chairGroup.add(starLeg);
+    }
+
+    addContactShadow(chairGroup, 0.55, 0.55, 0, 0, 0.55);
+    chairGroup.position.set(-1.1, 0, 0.95);
     furnitureGroup.add(chairGroup);
 
-    addContactShadow(deskGroup, 1.3, 0.7, 0, 0, 0.65);
-    deskGroup.position.set(-1.1, 0, 0.2);
-    furnitureGroup.add(deskGroup);
+    // --- NATURAL SISAL RUNNER RUG (Cat Scratch Proof) ---
+    const rugCanvas = document.createElement('canvas');
+    rugCanvas.width = 256; rugCanvas.height = 256;
+    const rctx = rugCanvas.getContext('2d');
+    rctx.fillStyle = '#d7c4a7';
+    rctx.fillRect(0, 0, 256, 256);
+    rctx.strokeStyle = '#bda582';
+    rctx.lineWidth = 3;
+    for (let i = 0; i <= 256; i += 16) {
+      rctx.beginPath(); rctx.moveTo(i, 0); rctx.lineTo(i, 256); rctx.stroke();
+    }
+    const sisalTex = new THREE.CanvasTexture(rugCanvas);
+    sisalTex.wrapS = THREE.RepeatWrapping; sisalTex.wrapT = THREE.RepeatWrapping;
+    sisalTex.repeat.set(4, 8);
+    const sisalRug = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.0, 2.2),
+      new THREE.MeshStandardMaterial({ map: sisalTex, roughness: 0.9 })
+    );
+    sisalRug.rotation.x = -Math.PI / 2;
+    sisalRug.position.set(-0.25, 0.002, 0.3);
+    sisalRug.receiveShadow = true;
+    furnitureGroup.add(sisalRug);
 
     scene.add(furnitureGroup);
 
     // --- 7. Kinematic Interactive Storage Objects ---
     const storageGroup = new THREE.Group();
 
-    // A. Wall-Mounted Badminton Equipment
+    // A. Wall-Mounted Badminton Equipment (High Position > 1.7m)
     const racketGroup = new THREE.Group();
-    const rackPlate = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.03, 0.36, 0.12, 3, 0.01), woodMat);
-    rackPlate.position.set(-1.8, 1.8, -0.6);
+    const rackPlate = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.025, 0.36, 0.12, 3, 0.01), woodMat);
+    rackPlate.position.set(-1.7, 1.8, -0.6);
     racketGroup.add(rackPlate);
 
-    const racketHead = new THREE.Mesh(
-      new THREE.TorusGeometry(0.12, 0.01, 16, 32),
-      new THREE.MeshStandardMaterial({ color: 0x2563eb, metalness: 0.8, roughness: 0.2 })
+    // 2 Badminton Rackets
+    [-0.03, 0.03].forEach((offsetZ, rIdx) => {
+      const rHead = new THREE.Mesh(
+        new THREE.TorusGeometry(0.11, 0.008, 16, 32),
+        new THREE.MeshStandardMaterial({ color: (rIdx === 0 ? 0x2563eb : 0xef4444), metalness: 0.8, roughness: 0.2 })
+      );
+      rHead.scale.set(1.0, 1.25, 1.0);
+      rHead.position.set(-1.62, 1.7, -0.6 + offsetZ);
+      racketGroup.add(rHead);
+
+      const rStrings = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.18, 0.24, 8, 10),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, wireframe: true })
+      );
+      rStrings.position.set(-1.62, 1.7, -0.6 + offsetZ);
+      racketGroup.add(rStrings);
+
+      const rShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.28), steelMat);
+      rShaft.position.set(-1.62, 1.45, -0.6 + offsetZ);
+      racketGroup.add(rShaft);
+
+      // Grip Tape (wrapped look)
+      const rGrip = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.011, 0.013, 0.16, 16),
+        new THREE.MeshStandardMaterial({ color: (rIdx === 0 ? 0xfacc15 : 0x1e293b), roughness: 0.9 })
+      );
+      rGrip.position.set(-1.62, 1.25, -0.6 + offsetZ);
+      racketGroup.add(rGrip);
+    });
+
+    // Badminton Shuttlecock Tube (Yonex Style)
+    const shuttleTube = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.038, 0.038, 0.38, 24),
+      new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.3 })
     );
-    racketHead.scale.set(1.0, 1.25, 1.0);
-    racketGroup.add(racketHead);
+    shuttleTube.position.set(-1.66, 1.45, -0.42);
+    shuttleTube.castShadow = true;
+    racketGroup.add(shuttleTube);
 
-    const stringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.65, wireframe: true });
-    const stringMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.26, 10, 12), stringMat);
-    racketGroup.add(stringMesh);
-
-    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.28), steelMat);
-    shaft.position.y = -0.26;
-    racketGroup.add(shaft);
-
-    const gripHandle = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.012, 0.014, 0.18, 16),
-      new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.95 })
-    );
-    gripHandle.position.y = -0.48;
-    racketGroup.add(gripHandle);
-
-    racketHead.position.set(-1.7, 1.7, -0.6);
-    stringMesh.position.set(-1.7, 1.7, -0.6);
-    shaft.position.set(-1.7, 1.44, -0.6);
-    gripHandle.position.set(-1.7, 1.22, -0.6);
-
+    // Sports Racket Bag
     const gearBag = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(0.18, 0.72, 0.28, 4, 0.03),
-      new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.7 })
+      new THREE.RoundedBoxGeometry(0.16, 0.68, 0.26, 4, 0.03),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.7 })
     );
-    gearBag.position.set(-1.68, 0.85, -0.6);
+    gearBag.position.set(-1.64, 0.82, -0.6);
     gearBag.castShadow = true;
     racketGroup.add(gearBag);
 
     storageGroup.add(racketGroup);
 
-    // B. Kinematic Under-bed Storage Drawers (Slides along X axis!)
+    // B. Kinematic Under-bed Storage Drawers (Slides along X axis into walkway!)
     const bedDrawersGroup = new THREE.Group();
-    const drawerMat = new THREE.MeshPhysicalMaterial({
+    const frostedMat = new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
-      transmission: 0.75,
-      opacity: 0.85,
+      transmission: 0.8,
+      opacity: 0.88,
       transparent: true,
-      roughness: 0.25
+      roughness: 0.2
     });
 
-    [ -0.7, 0.3 ].forEach((bz, idx) => {
+    [ -0.65, 0.35 ].forEach((bz, idx) => {
       const box = new THREE.Mesh(
         new THREE.RoundedBoxGeometry(0.65, 0.17, 0.85, 4, 0.015),
-        drawerMat
+        frostedMat
       );
       box.position.set(0.12, 0.09, bz);
       box.castShadow = true;
       bedDrawersGroup.add(box);
 
+      // Clothes / Bedding inside visible through frosted walls
+      const insideClothes = new THREE.Mesh(
+        new THREE.RoundedBoxGeometry(0.58, 0.12, 0.76, 3, 0.02),
+        new THREE.MeshStandardMaterial({ color: (idx === 0 ? 0x3b82f6 : 0xec4899), roughness: 0.9 })
+      );
+      insideClothes.position.set(0.12, 0.08, bz);
+      bedDrawersGroup.add(insideClothes);
+
+      // Ergonomic Pull Handle
       const handle = new THREE.Mesh(
-        new THREE.BoxGeometry(0.02, 0.04, 0.18),
-        new THREE.MeshStandardMaterial({ color: 0x3b82f6 })
+        new THREE.BoxGeometry(0.02, 0.035, 0.16),
+        new THREE.MeshStandardMaterial({ color: 0x2563eb })
       );
       handle.position.set(-0.21, 0.1, bz);
       bedDrawersGroup.add(handle);
+
+      // Mini Castor Wheels
+      [[-0.16, -0.36], [0.4, -0.36], [-0.16, 0.36], [0.4, 0.36]].forEach(([wx, wz]) => {
+        const castor = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.014), steelMat);
+        castor.rotation.z = Math.PI / 2;
+        castor.position.set(wx, 0.014, bz + wz);
+        bedDrawersGroup.add(castor);
+      });
     });
 
     storageGroup.add(bedDrawersGroup);
@@ -964,266 +1155,358 @@
       transparent: true,
       roughness: 0.1
     });
-    const caddy = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.24, 0.16, 0.36, 3, 0.008), acrylicMat);
-    caddy.position.set(-0.35, 0.85, -0.1);
+    const caddy = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.22, 0.16, 0.34, 3, 0.008), acrylicMat);
+    caddy.position.set(-0.35, 0.85, 0.1);
     caddy.castShadow = true;
     snackGroup.add(caddy);
 
+    // Colorful snack pouches standing vertically (save 70% desktop space)
     [0xef4444, 0xf59e0b, 0x10b981, 0x8b5cf6].forEach((col, sidx) => {
       const snackPouch = new THREE.Mesh(
-        new THREE.BoxGeometry(0.04, 0.14, 0.28),
+        new THREE.BoxGeometry(0.035, 0.14, 0.26),
         new THREE.MeshStandardMaterial({ color: col, roughness: 0.4 })
       );
-      snackPouch.position.set(-0.42 + sidx * 0.05, 0.86, -0.1);
+      snackPouch.position.set(-0.41 + sidx * 0.045, 0.86, 0.1);
       snackGroup.add(snackPouch);
     });
     storageGroup.add(snackGroup);
 
-    // D. Kinematic Cat Station & Sealed Food Bucket
+    // D. Kinematic Cat Station & Airtight Pet Food Bucket
     const catStationGroup = new THREE.Group();
+    // Non-slip silicone feeding mat
     const catMat = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(0.48, 0.015, 0.32, 3, 0.01),
+      new THREE.RoundedBoxGeometry(0.45, 0.01, 0.3, 3, 0.01),
       new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.8 })
     );
-    catMat.position.set(-1.45, 0.008, -1.2);
+    catMat.position.set(-1.42, 0.006, -1.2);
     catStationGroup.add(catMat);
 
-    const bowlStand = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.38, 0.08, 0.18, 3, 0.01), woodMat);
-    bowlStand.position.set(-1.45, 0.05, -1.2);
+    // Elevated Bamboo Bowl Stand
+    const bowlStand = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.36, 0.07, 0.16, 3, 0.01), woodMat);
+    bowlStand.position.set(-1.42, 0.045, -1.2);
     catStationGroup.add(bowlStand);
 
-    [-0.09, 0.09].forEach(bx => {
+    // 2 Ceramic Bowls (Dry food & Fresh water)
+    [-0.08, 0.08].forEach(bx => {
       const bowl = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.065, 0.05, 0.05, 24),
+        new THREE.CylinderGeometry(0.06, 0.045, 0.045, 24),
         new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.15 })
       );
-      bowl.rotation.x = -0.15;
-      bowl.position.set(-1.45 + bx, 0.09, -1.2);
+      bowl.rotation.x = -0.12;
+      bowl.position.set(-1.42 + bx, 0.085, -1.2);
       catStationGroup.add(bowl);
     });
 
-    // Bucket Base
+    // 10kg Airtight Cat Food Container (White with visual window)
     const bucketBase = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(0.32, 0.32, 0.42, 4, 0.02),
+      new THREE.RoundedBoxGeometry(0.3, 0.32, 0.4, 4, 0.02),
       new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 })
     );
-    bucketBase.position.set(-1.45, 0.16, -1.65);
+    bucketBase.position.set(-1.42, 0.16, -1.65);
     bucketBase.castShadow = true;
     catStationGroup.add(bucketBase);
 
+    // Clear Level Gauge Window
+    const bucketGauge = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.04, 0.2),
+      new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.2 })
+    );
+    bucketGauge.rotation.y = Math.PI / 2;
+    bucketGauge.position.set(-1.268, 0.16, -1.65);
+    catStationGroup.add(bucketGauge);
+
     // Kinematic Bucket Lid (Hinge at rear)
     const bucketLidPivot = new THREE.Group();
-    bucketLidPivot.position.set(-1.45, 0.32, -1.86);
+    bucketLidPivot.position.set(-1.42, 0.32, -1.85);
 
     const bucketLid = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(0.33, 0.04, 0.43, 3, 0.01),
-      new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.4 })
+      new THREE.RoundedBoxGeometry(0.31, 0.035, 0.41, 3, 0.01),
+      new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.35 })
     );
-    bucketLid.position.set(0, 0.02, 0.21);
+    bucketLid.position.set(0, 0.018, 0.2);
     bucketLidPivot.add(bucketLid);
     catStationGroup.add(bucketLidPivot);
 
-    storageGroup.add(catStationGroup);
+    // --- CUTE 3D COMPANION CAT (Low-Poly Orange Tabby) ---
+    const catCompanion = new THREE.Group();
+    const catFurMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.75 });
+    const catWhiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
 
+    // Cat Body (loafing comfortably on the sisal mat)
+    const catBody = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.24, 0.15, 0.34, 4, 0.05), catFurMat);
+    catBody.position.set(0, 0.075, 0);
+    catBody.castShadow = true;
+    catCompanion.add(catBody);
+
+    // Cat Head
+    const catHead = new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 16), catFurMat);
+    catHead.position.set(0, 0.15, 0.18);
+    catHead.castShadow = true;
+    catCompanion.add(catHead);
+
+    // Ears
+    [-0.045, 0.045].forEach(ex => {
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.06, 4), catFurMat);
+      ear.rotation.y = Math.PI / 4;
+      ear.position.set(ex, 0.23, 0.18);
+      catCompanion.add(ear);
+    });
+
+    // Cute Snout
+    const catSnout = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 12), catWhiteMat);
+    catSnout.position.set(0, 0.13, 0.26);
+    catCompanion.add(catSnout);
+
+    // Curled Tail
+    const catTail = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.025, 8, 16, Math.PI * 1.1), catFurMat);
+    catTail.rotation.x = Math.PI / 2;
+    catTail.position.set(0.08, 0.03, -0.15);
+    catCompanion.add(catTail);
+
+    catCompanion.position.set(-0.25, 0.005, -0.4);
+    catCompanion.rotation.y = -0.5;
+    catStationGroup.add(catCompanion);
+
+    storageGroup.add(catStationGroup);
     scene.add(storageGroup);
 
     // --- 8. Kinematics Physics Controller Logic ---
     let isDoorOpen = false;
+    let isDrawerOpen = false;
+    let isBucketOpen = false;
+
     function toggleDoor() {
-      playGlideSound();
+      playClickSound();
       isDoorOpen = !isDoorOpen;
+      const targetAngle = isDoorOpen ? Math.PI * 0.48 : 0;
       document.getElementById('k-door').classList.toggle('active', isDoorOpen);
 
       new TWEEN.Tween(doorHingeGroup.rotation)
-        .to({ y: isDoorOpen ? 1.48 : 0 }, 1000)
-        .easing(TWEEN.Easing.Cubic.Out)
+        .to({ y: targetAngle }, 850)
+        .easing(TWEEN.Easing.Cubic.InOut)
         .start();
     }
 
-    let isDrawerOut = false;
     function toggleDrawer() {
       playGlideSound();
-      isDrawerOut = !isDrawerOut;
-      document.getElementById('k-drawer').classList.toggle('active', isDrawerOut);
+      isDrawerOpen = !isDrawerOpen;
+      // Slides out along X into walkway (from 0 to -0.65m)
+      const targetX = isDrawerOpen ? -0.65 : 0;
+      document.getElementById('k-drawer').classList.toggle('active', isDrawerOpen);
 
-      // Slide drawer out along X axis into walkway
       new TWEEN.Tween(bedDrawersGroup.position)
-        .to({ x: isDrawerOut ? -0.65 : 0 }, 1000)
-        .easing(TWEEN.Easing.Cubic.Out)
+        .to({ x: targetX }, 950)
+        .easing(TWEEN.Easing.Cubic.InOut)
         .start();
     }
 
-    let isBucketOpen = false;
     function toggleCatBucket() {
       playClickSound();
       isBucketOpen = !isBucketOpen;
+      const targetRot = isBucketOpen ? -Math.PI * 0.42 : 0;
       document.getElementById('k-bucket').classList.toggle('active', isBucketOpen);
 
       new TWEEN.Tween(bucketLidPivot.rotation)
-        .to({ x: isBucketOpen ? -1.85 : 0 }, 800)
+        .to({ x: targetRot }, 550)
         .easing(TWEEN.Easing.Back.Out)
         .start();
     }
 
-    // --- 9. Raycaster for Direct 3D Click & Kinematics Triggering ---
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
-    window.addEventListener('click', (event) => {
-      // Don't click if clicking on HUD elements
-      if (event.target.closest('.hud-layer') || event.target.closest('.ar-modal')) return;
-
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-      raycaster.setFromCamera(mouse, camera);
-
-      const intersects = raycaster.intersectObjects([doorLeaf, bucketBase, bedDrawersGroup], true);
-      if (intersects.length > 0) {
-        const hit = intersects[0].object;
-        if (hit === doorLeaf) toggleDoor();
-        else if (hit === bucketBase || hit.parent === bucketLidPivot) toggleCatBucket();
-        else toggleDrawer();
-      }
-    });
-
-    // --- 10. AR & Analytics Modals ---
-    function openARModal() {
-      document.getElementById('arModal').classList.add('show');
-    }
-    function closeARModal() {
-      document.getElementById('arModal').classList.remove('show');
-    }
-    function toggleAnalytics() {
-      const panel = document.getElementById('analyticsPanel');
-      panel.classList.toggle('show');
-      document.getElementById('btn-analytics').classList.toggle('active');
-    }
-
-    // Export USDZ for iPhone/iPad Native AR QuickLook
-    function exportUSDZ() {
-      if (!THREE.USDZExporter) {
-        alert('USDZ 导出库加载中，请稍候...');
-        return;
-      }
-      const exporter = new THREE.USDZExporter();
-      exporter.parse(storageGroup, (usdz) => {
-        const blob = new Blob([usdz], { type: 'application/octet-stream' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'Room_Storage_1to1_AR.usdz';
-        link.click();
-      });
-    }
-
-    // --- 11. Hotspots Definition ---
+    // --- 9. Hotspots Management ---
     const hotspotsData = [
       {
-        id: 'racket', icon: '🏸', label: '羽毛球拍高位壁挂架',
+        id: 'hs-racket',
+        title: '🏸 羽毛球拍高位壁挂架',
         pos: new THREE.Vector3(-1.7, 1.8, -0.6),
-        title: '高位实木防刮羽毛球拍壁挂架',
-        loc: '墙面高处 (离地 1.8m ~ 2.0m)，避开猫咪啃咬手胶',
-        items: '羽毛球拍 2 支、专业装备球包、备用球筒',
-        solution: '微孔无痕膨胀螺钉打孔上墙，配有软硅胶防刮拍框卡槽，拍线悬空完全不受力',
-        specs: '总宽 36cm × 深 12cm · 承重 25kg (微孔直径仅 4mm)',
-        price: '¥28.9', kw: '羽毛球拍挂架 壁挂 墙壁置物架 包胶防刮',
-        tip: '戴上拍套挂在高处，既保护高磅拍线，又杜绝猫抓啃咬握把手胶！'
+        data: {
+          title: '🏸 航空铝合金双拍挂架',
+          pos: '门后高位立面 (挂高 1.8m)',
+          size: '360mm x 120mm x 30mm',
+          cat: '高位悬挂远离地面，杜绝猫咪磨爪抓烂球拍手胶网线',
+          mat: '阳极氧化铝合金 + 纳米免打孔无痕背胶',
+          price: '¥48.00'
+        }
       },
       {
-        id: 'underbed', icon: '🛏️', label: '床底双向滑轮扁箱',
-        pos: new THREE.Vector3(0.15, 0.32, -0.2),
-        title: '双向对开盖带滚轮收纳扁箱',
-        loc: '床下空间 (床架离地净高 22cm)',
-        items: '快递盒原装杂物、换季棉被被褥、备用日化耗材',
-        solution: '底部隐形万向滚轮，双向开盖设计，拉出床底一半即可轻松拿取',
-        specs: '高 17cm × 宽 65cm × 长 85cm (预留 5cm 滑行通过公差)',
-        price: '¥39.9 / 2个装', kw: '床底收纳箱 带轮 扁平 大容量 塑料防潮',
-        tip: '彻底淘汰堆在过道的杂色快递纸箱，床底盲区秒变 130L 隐形储物舱！'
+        id: 'hs-drawer',
+        title: '🛏️ 床底双向滑轮扁箱',
+        pos: new THREE.Vector3(0.12, 0.22, -0.15),
+        data: {
+          title: '🛏️ 磨砂半透双向滑轮扁箱 (2件装)',
+          pos: '床底暗空间 (利用 22cm 净高)',
+          size: '800mm x 600mm x 170mm (留空 5cm 散热防尘)',
+          cat: '全封闭卡扣密封，彻底封死床底猫咪钻入死角',
+          mat: '食品级环保 PP + 尼龙静音滚轮',
+          price: '¥79.00'
+        }
       },
       {
-        id: 'snack', icon: '🍿', label: '桌面分层零食立插盒',
-        pos: new THREE.Vector3(-0.35, 1.05, -0.1),
-        title: '大开口高透亚克力零食整理盒',
-        loc: '书桌右上角死角 (占桌面仅 0.08㎡)',
-        items: '袋装薯片、坚果小包装、茶包咖啡、零食密封夹',
-        solution: '斜口大开口立式收纳，零食如同书籍一般立插陈列，先进先出防过期',
-        specs: '长 36cm × 宽 24cm × 高 16cm (食品级加厚高透 PET)',
-        price: '¥12.8', kw: '桌面零食收纳盒 斜口 亚克力 桌面置物架',
-        tip: '告别平铺散落一桌的凌乱感，零食保质期一眼可见，桌面瞬间空出 70%！'
+        id: 'hs-snack',
+        title: '🍿 桌面分层零食立插盒',
+        pos: new THREE.Vector3(-0.35, 0.95, 0.1),
+        data: {
+          title: '🍿 亚克力阶梯式零食收纳架',
+          pos: '书桌右上角死角',
+          size: '220mm x 160mm x 340mm',
+          cat: '透明垂直陈列，零食不散落，防止猫咪爪掏与偷吃',
+          mat: '高透加厚亚克力 (防摔耐磨)',
+          price: '¥36.00'
+        }
       },
       {
-        id: 'cat', icon: '🐱', label: '猫咪防潮密封粮桶角',
-        pos: new THREE.Vector3(-1.45, 0.55, -1.4),
-        title: '卡扣双密封加厚防潮储粮桶',
-        loc: '书桌旁墙角 (离地防水防踢踏)',
-        items: '10kg 大包装猫干粮、冻干主食、斜口护颈陶瓷双碗',
-        solution: '双层硅胶密封圈与卡扣紧锁，顶盖内置干燥剂卡槽，防猫咪偷扒翻袋与回潮变质',
-        specs: '长 42cm × 宽 32cm × 高 36cm (带透明余量刻度视窗)',
-        price: '¥36.5', kw: '宠物储粮桶 密封 防潮 10kg 卡扣 猫粮桶',
-        tip: '彻底解决大塑料袋敞口受潮和猫咪半夜扒袋，喂食舀粮单手秒开！'
+        id: 'hs-cat',
+        title: '🐱 猫咪防潮密封粮桶角',
+        pos: new THREE.Vector3(-1.42, 0.38, -1.65),
+        data: {
+          title: '🐱 10kg 气阀式防潮密封储粮桶',
+          pos: '门后角落安全区',
+          size: '300mm x 320mm x 400mm',
+          cat: '硅胶密封圈 + 倒扣安全锁，猫咪推倒不漏粮，防潮防偷吃',
+          mat: '食品级 ABS + 抗菌内胆',
+          price: '¥68.00'
+        }
       }
     ];
 
-    const hotspotContainer = document.getElementById('hotspot-layer');
+    let hotspotsVisible = true;
     const hotspotElems = [];
-    hotspotsData.forEach(h => {
+
+    hotspotsData.forEach(item => {
       const el = document.createElement('div');
       el.className = 'hotspot';
-      el.innerHTML = `<div class="hotspot-card">${h.icon} ${h.label}</div>`;
-      el.onclick = () => openDrawer(h);
-      hotspotContainer.appendChild(el);
-      hotspotElems.push({ el, pos: h.pos, data: h });
+      el.id = item.id;
+      el.innerHTML = '<div class="hotspot-pill">' + item.title + '</div>';
+      el.onclick = () => openDrawer(item.data);
+      document.body.appendChild(el);
+      hotspotElems.push({ elem: el, pos: item.pos });
     });
 
-    function updateHotspots() {
-      const v = new THREE.Vector3();
-      hotspotElems.forEach(({ el, pos }) => {
-        v.copy(pos);
-        v.project(camera);
-        if (v.z > 1) { el.style.display = 'none'; return; }
-        el.style.display = 'block';
-        el.style.left = `${(v.x * 0.5 + 0.5) * window.innerWidth}px`;
-        el.style.top = `${(-v.y * 0.5 + 0.5) * window.innerHeight}px`;
+    function toggleHotspots() {
+      hotspotsVisible = !hotspotsVisible;
+      document.getElementById('k-hotspots').classList.toggle('active', hotspotsVisible);
+      hotspotElems.forEach(h => {
+        h.elem.classList.toggle('hidden', !hotspotsVisible);
       });
     }
 
     function openDrawer(data) {
-      document.getElementById('d-title').innerText = `${data.icon} ${data.title}`;
-      document.getElementById('d-loc').innerText = data.loc;
-      document.getElementById('d-items').innerText = data.items;
-      document.getElementById('d-solution').innerText = data.solution;
-      document.getElementById('d-specs').innerText = data.specs;
+      document.getElementById('d-title').innerText = data.title;
+      document.getElementById('d-pos').innerText = data.pos;
+      document.getElementById('d-size').innerText = data.size;
+      document.getElementById('d-cat').innerText = data.cat;
+      document.getElementById('d-mat').innerText = data.mat;
       document.getElementById('d-price').innerText = data.price;
-      document.getElementById('d-kw').innerText = data.kw;
-      document.getElementById('d-tip').innerText = `💡 ${data.tip}`;
       document.getElementById('drawer').classList.add('show');
     }
+
     function closeDrawer() {
       document.getElementById('drawer').classList.remove('show');
     }
 
-    // --- 12. Camera Tweening ---
-    function tweenCam(pos, target, dur = 1100) {
-      new TWEEN.Tween(camera.position).to(pos, dur).easing(TWEEN.Easing.Cubic.Out).start();
-      new TWEEN.Tween(controls.target).to(target, dur).easing(TWEEN.Easing.Cubic.Out).start();
+    function toggleAnalytics() {
+      document.getElementById('analytics-panel').classList.toggle('show');
+    }
+
+    function openARModal() {
+      document.getElementById('ar-modal').classList.add('show');
+    }
+
+    function closeARModal() {
+      document.getElementById('ar-modal').classList.remove('show');
+    }
+
+    function exportUSDZ() {
+      alert('正在调用 USDZExporter 生成 1:1 毫米级空间计算模型，稍后将自动下载 .usdz 并在苹果设备上启动 AR Quick Look！');
+      try {
+        const exporter = new THREE.USDZExporter();
+        exporter.parse(storageGroup, function (result) {
+          const blob = new Blob([result], { type: 'model/vnd.usdz+zip' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'rental_room_storage_1to1.usdz';
+          link.click();
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Raycasting for direct 3D clicks
+    const raycaster = new THREE.Raycaster();
+    const mousePos = new THREE.Vector2();
+
+    window.addEventListener('click', (event) => {
+      if (event.clientY < 80 || event.clientY > window.innerHeight - 80 || event.clientX > window.innerWidth - 350) return;
+      mousePos.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mousePos.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mousePos, camera);
+
+      // Check door
+      const doorHits = raycaster.intersectObjects([doorLeaf, doorArchitrave], true);
+      if (doorHits.length > 0) { toggleDoor(); return; }
+
+      // Check bed drawers
+      const drawerHits = raycaster.intersectObjects(bedDrawersGroup.children, true);
+      if (drawerHits.length > 0) {
+        toggleDrawer();
+        openDrawer(hotspotsData[1].data);
+        return;
+      }
+
+      // Check cat bucket
+      const bucketHits = raycaster.intersectObjects([bucketBase, bucketLid], true);
+      if (bucketHits.length > 0) {
+        toggleCatBucket();
+        openDrawer(hotspotsData[3].data);
+        return;
+      }
+
+      // Check rackets
+      const racketHits = raycaster.intersectObjects(racketGroup.children, true);
+      if (racketHits.length > 0) {
+        openDrawer(hotspotsData[0].data);
+        return;
+      }
+
+      // Check snacks
+      const snackHits = raycaster.intersectObjects(snackGroup.children, true);
+      if (snackHits.length > 0) {
+        openDrawer(hotspotsData[2].data);
+        return;
+      }
+    });
+
+    // --- 10. Camera Presets ---
+    function tweenCam(pos, target, dur = 1000) {
+      new TWEEN.Tween(camera.position).to(pos, dur).easing(TWEEN.Easing.Cubic.InOut).start();
+      new TWEEN.Tween(controls.target).to(target, dur).easing(TWEEN.Easing.Cubic.InOut).start();
     }
 
     function setCam(mode) {
       document.querySelectorAll('.camera-tabs button').forEach(b => b.classList.remove('active'));
       event.target.classList.add('active');
 
-      if (mode === 'iso') tweenCam({ x: 8.5, y: 9, z: 8.5 }, { x: 0, y: 1.1, z: 0 });
-      else if (mode === 'racket') { tweenCam({ x: -0.6, y: 2.1, z: -0.5 }, { x: -1.8, y: 1.6, z: -0.6 }); openDrawer(hotspotsData[0]); }
-      else if (mode === 'bed') { tweenCam({ x: 0.1, y: 1.2, z: 1.6 }, { x: 0.15, y: 0.2, z: -0.2 }); openDrawer(hotspotsData[1]); }
-      else if (mode === 'desk') { tweenCam({ x: -0.4, y: 1.6, z: 0.7 }, { x: -0.35, y: 0.9, z: -0.1 }); openDrawer(hotspotsData[2]); }
-      else if (mode === 'cat') { tweenCam({ x: -0.5, y: 1.2, z: -1.3 }, { x: -1.45, y: 0.3, z: -1.4 }); openDrawer(hotspotsData[3]); }
-      else if (mode === 'top') tweenCam({ x: 0.01, y: 14, z: 0.01 }, { x: 0, y: 0, z: 0 });
+      if (mode === 'iso') tweenCam({ x: 4.6, y: 5.2, z: 5.2 }, { x: 0, y: 0.75, z: 0 });
+      else if (mode === 'racket') tweenCam({ x: -0.2, y: 2.0, z: -0.3 }, { x: -1.7, y: 1.6, z: -0.6 });
+      else if (mode === 'bed') tweenCam({ x: -0.5, y: 1.4, z: -0.8 }, { x: 0.9, y: 0.25, z: -1.2 });
+      else if (mode === 'desk') tweenCam({ x: -0.2, y: 1.5, z: 0.8 }, { x: -1.1, y: 0.85, z: 0.4 });
+      else if (mode === 'cat') tweenCam({ x: -0.4, y: 1.2, z: -0.9 }, { x: -1.4, y: 0.25, z: -1.4 });
+      else if (mode === 'top') tweenCam({ x: 0.01, y: 8.5, z: 0.01 }, { x: 0, y: 0, z: 0 });
     }
 
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+    // --- 11. Render Loop ---
+    function updateHotspots() {
+      if (!hotspotsVisible) return;
+      const tempV = new THREE.Vector3();
+      hotspotElems.forEach(h => {
+        tempV.copy(h.pos);
+        tempV.project(camera);
+        const x = (tempV.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (-tempV.y * 0.5 + 0.5) * window.innerHeight;
+        h.elem.style.transform = 'translate(-50%, -50%) translate(' + x + 'px,' + y + 'px)';
+        h.elem.style.zIndex = (tempV.z < 1) ? 20 : -1;
+      });
+    }
 
     function animate() {
       requestAnimationFrame(animate);
@@ -1232,11 +1515,13 @@
       updateHotspots();
       renderer.render(scene, camera);
     }
-    requestAnimationFrame(animate);
+    animate();
 
-    // Initial Welcome Drift
-    camera.position.set(11, 11, 11);
-    tweenCam({ x: 8.5, y: 9, z: 8.5 }, { x: 0, y: 1.1, z: 0 }, 1800);
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
   </script>
 </body>
 </html>
