@@ -633,9 +633,15 @@
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.maxPolarAngle = Math.PI / 2 - 0.05;
-    controls.minDistance = 2.0;
+    controls.minDistance = 0.6;
     controls.maxDistance = 16;
     controls.target.set(0, 0.75, 0);
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('cam') === 'wardrobe') {
+      camera.position.set(-1.50, 1.45, 0.85);
+      controls.target.set(1.43, 1.15, 0.85);
+      controls.update();
+    }
 
     // --- 4. Lighting ---
     const ambLight = new THREE.AmbientLight(0xfff7ed, 0.75);
@@ -1369,133 +1375,284 @@
 
     storageGroup.add(catStationGroup);
     
-    // E. Modular Heavy-Duty Wardrobe & Suitcase Storage System (East Wall: Z=0.20 to 1.50)
+    // E. Modular Heavy-Duty Wardrobe & Suitcase Storage System (High Capacity & Ultra-Realistic)
     const wardrobeGroup = new THREE.Group();
     const wFrameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.85, roughness: 0.25 });
-    const wShelfMat = new THREE.MeshStandardMaterial({ color: 0xc49a6c, roughness: 0.6 });
+    const wShelfMat = new THREE.MeshStandardMaterial({ color: 0xba9063, roughness: 0.55 });
+    const hangerMat = new THREE.MeshStandardMaterial({ color: 0x92613b, roughness: 0.4 });
+    const hookMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.9, roughness: 0.2 });
 
-    // 4 Vertical Steel Upright Columns (Height 2.15m)
-    [ [1.18, 0.22], [1.68, 0.22], [1.18, 1.48], [1.68, 1.48] ].forEach(([px, pz]) => {
-      const post = new THREE.Mesh(new THREE.BoxGeometry(0.035, 2.15, 0.035), wFrameMat);
+    // 1. Structural Upright Columns (6 Columns: 4 Outer Corners + 2 Mid-Dividers at Z = 0.72)
+    [
+      [1.18, 0.22], [1.68, 0.22], // Left-rear & left-front
+      [1.18, 0.72], [1.68, 0.72], // Mid-divider columns
+      [1.18, 1.48], [1.68, 1.48]  // Right-rear & right-front
+    ].forEach(([px, pz]) => {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.032, 2.15, 0.032), wFrameMat);
       post.position.set(px, 1.075, pz);
       post.castShadow = true;
       wardrobeGroup.add(post);
     });
 
-    // 3 Horizontal Heavy-Duty Storage Shelves
-    // Bottom Shoe/Bin Shelf (Y = 0.08m)
-    const shelfBottom = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.02, 1.28), wShelfMat);
+    // Rear Anti-Sway X-Bracing (真实碳钢衣柜抗剪刀撑拉杆)
+    const braceMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8, roughness: 0.3 });
+    const brace1 = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 1.55), braceMat);
+    brace1.rotation.z = Math.PI / 2;
+    brace1.rotation.y = 0.52;
+    brace1.position.set(1.68, 1.05, 0.85);
+    wardrobeGroup.add(brace1);
+
+    const brace2 = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 1.55), braceMat);
+    brace2.rotation.z = Math.PI / 2;
+    brace2.rotation.y = -0.52;
+    brace2.position.set(1.68, 1.05, 0.85);
+    wardrobeGroup.add(brace2);
+
+    // 2. Heavy-Duty Horizontal Shelves (Solid Oak / Carbon Steel)
+    // Bottom Platform Shelf (Y = 0.08m, elevated from floor to prevent dust/moisture)
+    const shelfBottom = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.024, 1.28), wShelfMat);
     shelfBottom.position.set(1.43, 0.08, 0.85);
     shelfBottom.receiveShadow = true;
     wardrobeGroup.add(shelfBottom);
 
-    // Mid Separator Shelf (Y = 1.05m)
-    const shelfMid = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.02, 1.28), wShelfMat);
-    shelfMid.position.set(1.43, 1.05, 0.85);
-    shelfMid.receiveShadow = true;
-    wardrobeGroup.add(shelfMid);
-
-    // Top Reinforced Luggage Shelf (Y = 1.95m)
-    const shelfTop = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.025, 1.28), wShelfMat);
+    // Top Luggage Deck Shelf (Y = 1.95m, reinforced 180kg payload)
+    const shelfTop = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.026, 1.28), wShelfMat);
     shelfTop.position.set(1.43, 1.95, 0.85);
     shelfTop.receiveShadow = true;
     wardrobeGroup.add(shelfTop);
 
-    // Upper Hanging Clothes Rail (Stainless Steel Rod along Z)
-    const hangRail = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.26), wFrameMat);
+    // Mid Structural Divider Bar (At Z = 0.72 connecting front & back columns)
+    const midBar = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.02, 0.02), wFrameMat);
+    midBar.position.set(1.43, 1.05, 0.72);
+    wardrobeGroup.add(midBar);
+
+    // 3. Continuous Clothes Rail (加粗不锈钢实心挂衣横杆 Y = 1.88m)
+    const hangRail = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 1.26), wFrameMat);
     hangRail.rotation.x = Math.PI / 2;
     hangRail.position.set(1.43, 1.88, 0.85);
     wardrobeGroup.add(hangRail);
 
-    // Array of 9 Hanging Garments on Hangers (Winter Coats, Trench, Shirts, Hoodies)
-    const garmentList = [
-      { col: 0x334155, len: 0.80, w: 0.38, th: 0.05 }, // Charcoal Winter Parka
-      { col: 0xd97706, len: 0.78, w: 0.38, th: 0.045 }, // Camel Trench Coat
-      { col: 0xf8fafc, len: 0.64, w: 0.36, th: 0.035 }, // White Oxford Shirt
-      { col: 0x60a5fa, len: 0.64, w: 0.36, th: 0.035 }, // Light Blue Linen Shirt
-      { col: 0x0f172a, len: 0.68, w: 0.38, th: 0.05 }, // Heavy Black Hoodie
-      { col: 0x4d5b44, len: 0.65, w: 0.38, th: 0.045 }, // Olive Bomber Jacket
-      { col: 0x881337, len: 0.60, w: 0.36, th: 0.04 }, // Burgundy Wool Sweater
-      { col: 0xd6c7b2, len: 0.62, w: 0.36, th: 0.035 }, // Cream Cardigan
-      { col: 0x1e3a8a, len: 0.72, w: 0.38, th: 0.045 }  // Navy Casual Blazer
+    // 4. Dense, Realistic Clothing Collection (38+ High-Capacity Garments)
+    function createGarment(col, len, w, th, pz, yHang = 1.88) {
+      const gGroup = new THREE.Group();
+      
+      // Steel Wire Hook
+      const hook = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.04), hookMat);
+      hook.position.set(0, 0.02, 0);
+      gGroup.add(hook);
+
+      // Wooden Hanger Bar with contoured shoulder drop
+      const hanger = new THREE.Mesh(new THREE.BoxGeometry(w * 0.96, 0.014, 0.016), hangerMat);
+      hanger.position.set(0, 0, 0);
+      gGroup.add(hanger);
+
+      // Fabric Garment Body (Beveled edges for realistic cloth drapery)
+      const mat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.85 });
+      const cloth = new THREE.Mesh(new THREE.RoundedBoxGeometry(w, len, th, 3, 0.012), mat);
+      cloth.position.set(0, -len / 2, 0);
+      cloth.castShadow = true;
+      gGroup.add(cloth);
+
+      gGroup.position.set(1.43, yHang, pz);
+      return gGroup;
+    }
+
+    // A. Left Zone: Long Overcoats, Trench, Down Parkas & Slacks (Z in 0.25 to 0.70)
+    // 14 dense long garments hanging with generous vertical drop (lengths 0.95m - 1.15m)
+    const longCoats = [
+      { col: 0x1e2229, len: 1.15, w: 0.42, th: 0.045 }, // Heavy Black Cashmere Overcoat
+      { col: 0x2a2d34, len: 1.12, w: 0.40, th: 0.040 }, // Charcoal Wool Trench
+      { col: 0xbfa07a, len: 1.10, w: 0.42, th: 0.042 }, // Classic Camel Double-Breasted Trench
+      { col: 0x36454f, len: 1.08, w: 0.40, th: 0.038 }, // Slate Long Mackintosh
+      { col: 0x1c2833, len: 1.15, w: 0.43, th: 0.050 }, // Deep Navy Puffer Down Coat
+      { col: 0xd5cbb2, len: 1.05, w: 0.40, th: 0.036 }, // Oatmeal Linen Duster
+      { col: 0x283747, len: 1.02, w: 0.38, th: 0.035 }, // Indigo Long Raincoat
+      { col: 0x2e4053, len: 1.08, w: 0.41, th: 0.042 }, // Storm Grey Chesterfield
+      { col: 0x4a235a, len: 1.00, w: 0.38, th: 0.035 }, // Plum Wool Coat
+      { col: 0x17202a, len: 1.12, w: 0.42, th: 0.045 }, // Midnight Long Down Parka
+      { col: 0x784212, len: 0.98, w: 0.38, th: 0.032 }, // Corduroy Long Jacket
+      { col: 0x1b4f72, len: 1.05, w: 0.39, th: 0.036 }, // Navy Wool Slacks on Hanger
+      { col: 0x1f2937, len: 1.00, w: 0.38, th: 0.034 }, // Charcoal Pleated Trousers
+      { col: 0x374151, len: 0.95, w: 0.38, th: 0.032 }  // Tailored Grey Slacks
     ];
 
-    garmentList.forEach((g, gIdx) => {
-      const gz = 0.32 + gIdx * 0.125;
-      // Garment Body
-      const gMesh = new THREE.Mesh(
-        new THREE.RoundedBoxGeometry(g.w, g.len, g.th, 3, 0.015),
-        new THREE.MeshStandardMaterial({ color: g.col, roughness: 0.85 })
-      );
-      gMesh.position.set(1.43, 1.85 - g.len / 2, gz);
-      gMesh.castShadow = true;
-      wardrobeGroup.add(gMesh);
-
-      // Wooden Hanger Shoulder
-      const hangerBar = new THREE.Mesh(
-        new THREE.BoxGeometry(g.w * 0.95, 0.015, 0.015),
-        new THREE.MeshStandardMaterial({ color: 0x854d0e, roughness: 0.5 })
-      );
-      hangerBar.position.set(1.43, 1.86, gz);
-      wardrobeGroup.add(hangerBar);
+    longCoats.forEach((c, idx) => {
+      const pz = 0.25 + idx * 0.033;
+      wardrobeGroup.add(createGarment(c.col, c.len, c.w, c.th, pz));
     });
 
-    // Lower Zone: 3 Stackable Fabric Storage Drawers (Left half)
-    [0.18, 0.46, 0.74].forEach((dy, dIdx) => {
-      const drawerBox = new THREE.Mesh(
-        new THREE.RoundedBoxGeometry(0.48, 0.24, 0.58, 4, 0.015),
-        new THREE.MeshStandardMaterial({ color: (dIdx === 1 ? 0x94a3b8 : 0x64748b), roughness: 0.9 })
-      );
-      drawerBox.position.set(1.43, dy, 0.55);
-      drawerBox.castShadow = true;
-      wardrobeGroup.add(drawerBox);
+    // B. Right Zone: Dense Daily Tops, Hoodies, Shirts & Jackets (Z in 0.74 to 1.45)
+    // 24 dense garments tightly spaced at ~2.9cm intervals (lengths 0.58m - 0.74m)
+    const shortTops = [
+      { col: 0x0f172a, len: 0.72, w: 0.40, th: 0.048 }, // Black Heavy Fleece Hoodie
+      { col: 0x334155, len: 0.70, w: 0.39, th: 0.045 }, // Slate Zip-up Hoodie
+      { col: 0x475569, len: 0.68, w: 0.38, th: 0.040 }, // Heather Grey Crewneck
+      { col: 0x1e3a8a, len: 0.74, w: 0.40, th: 0.042 }, // Navy Harrington Jacket
+      { col: 0x2563eb, len: 0.66, w: 0.38, th: 0.035 }, // Washed Denim Trucker
+      { col: 0x1e293b, len: 0.68, w: 0.39, th: 0.040 }, // Dark Indigo Denim Jacket
+      { col: 0x3f3f46, len: 0.65, w: 0.38, th: 0.038 }, // Charcoal Bomber
+      { col: 0x52525b, len: 0.64, w: 0.38, th: 0.035 }, // Ash Grey Coach Jacket
+      { col: 0xf8fafc, len: 0.64, w: 0.36, th: 0.028 }, // Crisp White Oxford Shirt
+      { col: 0xf1f5f9, len: 0.64, w: 0.36, th: 0.028 }, // Off-White Linen Shirt
+      { col: 0x93c5fd, len: 0.62, w: 0.36, th: 0.028 }, // Sky Blue Chambray
+      { col: 0xbfdbfe, len: 0.63, w: 0.36, th: 0.028 }, // French Blue Poplin
+      { col: 0xdbeafe, len: 0.62, w: 0.36, th: 0.028 }, // Ice Blue Button-down
+      { col: 0x164e63, len: 0.65, w: 0.37, th: 0.032 }, // Teal Twill Overshirt
+      { col: 0x155e75, len: 0.66, w: 0.38, th: 0.035 }, // Marine Blue Flannel
+      { col: 0x065f46, len: 0.68, w: 0.38, th: 0.038 }, // Pine Green Wool Shacket
+      { col: 0x047857, len: 0.65, w: 0.37, th: 0.034 }, // Forest Green Cardigan
+      { col: 0x854d0e, len: 0.62, w: 0.36, th: 0.035 }, // Mustard Knit Sweater
+      { col: 0xb45309, len: 0.64, w: 0.37, th: 0.036 }, // Caramel Cashmere Crew
+      { col: 0x7c2d12, len: 0.66, w: 0.38, th: 0.038 }, // Rust Red Pullover
+      { col: 0x881337, len: 0.65, w: 0.37, th: 0.036 }, // Burgundy Cableknit
+      { col: 0xe2e8f0, len: 0.60, w: 0.36, th: 0.026 }, // Heavyweight White Tee
+      { col: 0xcbd5e1, len: 0.60, w: 0.36, th: 0.026 }, // Heather Grey Tee
+      { col: 0x0f172a, len: 0.60, w: 0.36, th: 0.026 }  // Jet Black Heavy Tee
+    ];
 
-      // Handle Tab
-      const tab = new THREE.Mesh(
-        new THREE.BoxGeometry(0.02, 0.03, 0.12),
-        new THREE.MeshStandardMaterial({ color: 0x1e293b })
-      );
-      tab.position.set(1.18, dy, 0.55);
-      wardrobeGroup.add(tab);
+    shortTops.forEach((t, idx) => {
+      const pz = 0.74 + idx * 0.030;
+      wardrobeGroup.add(createGarment(t.col, t.len, t.w, t.th, pz));
     });
 
-    // Lower Zone: Trousers / Slacks Hanging Rack (Right half)
-    const pantsRail = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.58), wFrameMat);
-    pantsRail.rotation.x = Math.PI / 2;
-    pantsRail.position.set(1.43, 0.95, 1.15);
-    wardrobeGroup.add(pantsRail);
+    // 5. Realistic Bottom Storage Solutions (彻底解决'衣服下面是什么东西'的违和感)
+    // A. Left Zone Floor (Under Long Coats): Cotton-Linen Laundry Hamper + Transparent Sneaker Boxes
+    // Natural Textured Linen Laundry Basket (日式无印风棉麻脏衣篮)
+    const hamperGroup = new THREE.Group();
+    const hamperMat = new THREE.MeshStandardMaterial({ color: 0xd4c3a3, roughness: 0.95 });
+    const hamperBase = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(0.40, 0.44, 0.34, 4, 0.03),
+      hamperMat
+    );
+    hamperBase.position.set(1.43, 0.31, 0.42);
+    hamperBase.castShadow = true;
+    hamperGroup.add(hamperBase);
 
-    [1.0, 1.15, 1.3].forEach((pz, pIdx) => {
-      const pant = new THREE.Mesh(
-        new THREE.RoundedBoxGeometry(0.36, 0.45, 0.03),
-        new THREE.MeshStandardMaterial({ color: (pIdx === 0 ? 0x1e3a8a : 0x334155), roughness: 0.9 })
+    // Dark Leather Handles on Hamper
+    const leatherMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.6 });
+    [-0.18, 0.18].forEach(hx => {
+      const handle = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.08, 0.035), leatherMat);
+      handle.position.set(1.43 + hx, 0.48, 0.42);
+      hamperGroup.add(handle);
+    });
+    wardrobeGroup.add(hamperGroup);
+
+    // 2 Stacked Clear Acrylic Sneaker Storage Boxes at Z = 0.64 (离长衣下摆有充分空隙)
+    const shoeBoxMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.1,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.65
+    });
+    [0.17, 0.35].forEach(sy => {
+      const shoeBox = new THREE.Mesh(
+        new THREE.RoundedBoxGeometry(0.36, 0.16, 0.22, 3, 0.01),
+        shoeBoxMat
       );
-      pant.position.set(1.43, 0.70, pz);
-      wardrobeGroup.add(pant);
+      shoeBox.position.set(1.43, sy, 0.62);
+      shoeBox.castShadow = true;
+      wardrobeGroup.add(shoeBox);
+
+      // Inner Sneaker Silhouette
+      const innerShoe = new THREE.Mesh(
+        new THREE.RoundedBoxGeometry(0.28, 0.10, 0.14, 2, 0.02),
+        new THREE.MeshStandardMaterial({ color: (sy > 0.2 ? 0xef4444 : 0x1e293b), roughness: 0.7 })
+      );
+      innerShoe.position.set(1.43, sy - 0.02, 0.62);
+      wardrobeGroup.add(innerShoe);
     });
 
-    // --- TOP REINFORCED SHELF: SUITCASE & LUGGAGE ZONE ---
-    // 1. 28-inch Large Suitcase (Silver Metallic Ribbed Hardshell)
+    // B. Right Zone Floor (Under Short Tops): Standardized MUJI/Tenma Style Frosted PP Modular Drawers
+    // 2 Columns x 3 Tiers = 6 Modular Drawers (严丝合缝、质感通透纯正的日式抽屉整理柜)
+    const drawerFrameMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.35 });
+    const drawerFaceMat = new THREE.MeshStandardMaterial({
+      color: 0xe2e8f0,
+      roughness: 0.25,
+      metalness: 0.05,
+      transparent: true,
+      opacity: 0.88
+    });
+    const handleSlotMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.4 });
+
+    // Drawer Cabinet Outer Frame Enclosure
+    const drawerShell = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(0.48, 0.68, 0.68, 4, 0.015),
+      drawerFrameMat
+    );
+    drawerShell.position.set(1.43, 0.43, 1.11);
+    drawerShell.castShadow = true;
+    wardrobeGroup.add(drawerShell);
+
+    // 6 Front Modular Drawer Panels with Recessed Handles & Subtle Inner Folded Clothing
+    const colZs = [0.95, 1.27]; // 2 Columns
+    const tierYs = [0.20, 0.43, 0.66]; // 3 Tiers
+    colZs.forEach((cz, cIdx) => {
+      tierYs.forEach((ty, tIdx) => {
+        // Frosted Front Face
+        const front = new THREE.Mesh(
+          new THREE.RoundedBoxGeometry(0.015, 0.20, 0.30, 3, 0.008),
+          drawerFaceMat
+        );
+        front.position.set(1.185, ty, cz);
+        wardrobeGroup.add(front);
+
+        // Recessed Ergonomic Pull Handle
+        const handle = new THREE.Mesh(
+          new THREE.BoxGeometry(0.01, 0.022, 0.10),
+          handleSlotMat
+        );
+        handle.position.set(1.18, ty + 0.065, cz);
+        wardrobeGroup.add(handle);
+
+        // Warm Visible Folded Clothing Layers inside frosted drawer
+        const foldCol = [0x38bdf8, 0xf43f5e, 0x10b981, 0xf59e0b, 0x6366f1, 0xec4899][cIdx * 3 + tIdx];
+        const foldedCloth = new THREE.Mesh(
+          new THREE.RoundedBoxGeometry(0.38, 0.12, 0.26, 2, 0.015),
+          new THREE.MeshStandardMaterial({ color: foldCol, roughness: 0.85 })
+        );
+        foldedCloth.position.set(1.42, ty - 0.02, cz);
+        wardrobeGroup.add(foldedCloth);
+      });
+    });
+
+    // Decorative Valet Tray on Top of Drawer Unit (Y = 0.78m, beneath short tops)
+    const tray = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(0.24, 0.02, 0.18, 2, 0.005),
+      new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.5 })
+    );
+    tray.position.set(1.35, 0.78, 0.95);
+    wardrobeGroup.add(tray);
+
+    // Folded Cashmere Scarf on Top of Drawers
+    const scarf = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(0.26, 0.04, 0.22, 3, 0.015),
+      new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.9 })
+    );
+    scarf.position.set(1.42, 0.79, 1.25);
+    wardrobeGroup.add(scarf);
+
+    // 6. Top Reinforced Shelf: Dual Suitcase Parking (28-inch + 20-inch)
+    // 28-inch Large Suitcase (Silver Metallic Ribbed Hardshell)
     const suit28Group = new THREE.Group();
-    const suit28Mat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.25 });
+    const suit28Mat = new THREE.MeshStandardMaterial({ color: 0xa8b2c1, metalness: 0.85, roughness: 0.25 });
     const suit28 = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.46, 0.26, 0.70, 4, 0.03), suit28Mat);
     suit28.position.set(1.43, 2.10, 0.62);
     suit28.castShadow = true;
     suit28Group.add(suit28);
 
-    // Corner Protective Bumpers & Lock
+    // Corner Bumpers & TSA Lock
     const bumperMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
     const lockPlate = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.04, 0.12), bumperMat);
     lockPlate.position.set(1.19, 2.10, 0.62);
     suit28Group.add(lockPlate);
 
-    // Retractable Handle
     const handleBar = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.02, 0.03), bumperMat);
     handleBar.position.set(1.43, 2.24, 0.62);
     suit28Group.add(handleBar);
     wardrobeGroup.add(suit28Group);
 
-    // 2. 20-inch Carry-On Suitcase (Matte Navy Blue Hardshell)
+    // 20-inch Carry-On Suitcase (Matte Navy Blue Hardshell)
     const suit20Group = new THREE.Group();
     const suit20Mat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, metalness: 0.5, roughness: 0.4 });
     const suit20 = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.42, 0.46, 0.24, 4, 0.025), suit20Mat);
@@ -1508,20 +1665,32 @@
     suit20Group.add(s20Handle);
     wardrobeGroup.add(suit20Group);
 
-    // --- CAT-PROOF DUST CURTAIN (防尘防猫毛拉帘，半开状态) ---
-    const curtainRail = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1.34), wFrameMat);
+    // 7. Cat-Proof Dust Curtain (防尘防抓防猫毛天然棉麻拉帘 - 优雅微开褶皱态)
+    const curtainRail = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 1.34), wFrameMat);
     curtainRail.rotation.x = Math.PI / 2;
     curtainRail.position.set(1.17, 2.13, 0.85);
     wardrobeGroup.add(curtainRail);
 
-    // Left gathered drape (aesthetic ripples)
-    const drapeL = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(0.06, 2.05, 0.26, 3, 0.02),
-      new THREE.MeshStandardMaterial({ color: 0xf1ece4, roughness: 0.9 })
+    // Flowing Fabric Wave Folds (天然垂感亚麻帘布)
+    const drapeMat = new THREE.MeshStandardMaterial({ color: 0xf1ece4, roughness: 0.95 });
+    [-0.04, 0.0, 0.04, 0.08].forEach((dz, i) => {
+      const pleat = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.025, 0.03, 2.05, 16),
+        drapeMat
+      );
+      pleat.position.set(1.17, 1.05, 0.28 + dz);
+      pleat.castShadow = true;
+      wardrobeGroup.add(pleat);
+    });
+    
+    // Top Fabric Header
+    const drapeHeader = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(0.05, 2.05, 0.24, 3, 0.02),
+      drapeMat
     );
-    drapeL.position.set(1.17, 1.05, 0.32);
-    drapeL.castShadow = true;
-    wardrobeGroup.add(drapeL);
+    drapeHeader.position.set(1.17, 1.05, 0.30);
+    drapeHeader.castShadow = true;
+    wardrobeGroup.add(drapeHeader);
 
     addContactShadow(wardrobeGroup, 0.65, 1.45, 1.43, 0.85, 0.65);
     storageGroup.add(wardrobeGroup);
@@ -1574,15 +1743,15 @@
     const hotspotsData = [
       {
         id: 'hs-wardrobe',
-        title: '👗 挂衣防尘衣柜与顶层行李箱',
+        title: '👗 38+大容量挂衣衣柜与双行李箱',
         pos: new THREE.Vector3(1.17, 1.65, 0.85),
         data: {
-          title: '👗 模块化挂衣防尘衣柜 + 顶层双行李箱库位',
-          pos: '东侧开阔立面 (长1.3m x 深0.55m x 高2.15m)',
-          size: '1300mm x 550mm x 2150mm (承重 180kg)',
-          cat: '配备半遮光垂感防尘帘，拉上即可 100% 杜绝猫毛飘落与爬衣抓扯',
-          mat: '加厚加粗碳素钢管 + 环保木质层板 + 遮光亚麻拉帘',
-          price: '¥269.00'
+          title: '👗 38+大容量分区衣柜 + 6格MUJI半透抽屉 + 顶层双行李箱',
+          pos: '东侧开阔立面 (长1.30m x 深0.55m x 高2.15m)',
+          size: '长短衣科学双分区 + 6格抽屉柜 + 棉麻脏衣篮 + 28/20寸双箱位',
+          cat: '配置半遮光垂感防尘拉帘，拉上即可 100% 杜绝猫毛沾染与爬衣抓扯',
+          mat: '加粗加厚碳素钢管 + E0级木层板 + 磨砂PP抽屉 + 天然棉麻拉帘',
+          price: '¥289.00 (框架含拉帘) + ¥98.00 (6抽屉整理柜套组)'
         }
       },
       {
@@ -1765,7 +1934,7 @@
       event.target.classList.add('active');
 
       if (mode === 'iso') tweenCam({ x: 4.6, y: 5.2, z: 5.2 }, { x: 0, y: 0.75, z: 0 });
-      else if (mode === 'wardrobe') tweenCam({ x: 0.2, y: 1.9, z: 1.5 }, { x: 1.43, y: 1.25, z: 0.85 });
+      else if (mode === 'wardrobe') tweenCam({ x: -0.65, y: 1.35, z: 0.85 }, { x: 1.43, y: 1.15, z: 0.85 });
       else if (mode === 'racket') tweenCam({ x: -0.2, y: 2.0, z: -0.3 }, { x: -1.7, y: 1.6, z: -0.6 });
       else if (mode === 'bed') tweenCam({ x: -0.5, y: 1.4, z: -1.0 }, { x: 0.9, y: 0.25, z: -1.25 });
       else if (mode === 'desk') tweenCam({ x: -0.2, y: 1.5, z: 1.0 }, { x: -1.1, y: 0.85, z: 0.6 });
