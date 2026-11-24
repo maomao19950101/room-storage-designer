@@ -686,9 +686,9 @@
     const wallMat = new THREE.MeshStandardMaterial({ color: 0xf5f3ee, roughness: 0.95 });
     const skirtingMat = new THREE.MeshStandardMaterial({ color: 0x483c32, roughness: 0.7 });
 
-    // East Wall (Right Wall: X = +1.8)
-    const eastWall = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.6, 4.8), wallMat);
-    eastWall.position.set(1.8, 1.3, 0);
+    // East Wall (Cutaway curb: X = +1.8)
+    const eastWall = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.12, 4.8), curbMat);
+    eastWall.position.set(1.8, 0.06, 0);
     eastWall.receiveShadow = true;
     roomGroup.add(eastWall);
 
