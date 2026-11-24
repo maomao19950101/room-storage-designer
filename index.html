@@ -823,33 +823,121 @@
     }
     roomGroup.add(windowGroup);
 
+    // --- ARCHITECTURAL HOLLOW DOOR FRAME & CORRIDOR ---
+    const doorFrameMat = new THREE.MeshStandardMaterial({ color: 0x3d3027, roughness: 0.5 });
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
+
+    // Hollow Frame (3 border pieces + metal threshold)
+    const jambRear = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.12, 0.04), doorFrameMat);
+    jambRear.position.set(-1.76, 1.06, -2.1);
+    roomGroup.add(jambRear);
+
+    const jambFront = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.12, 0.04), doorFrameMat);
+    jambFront.position.set(-1.76, 1.06, -1.2);
+    roomGroup.add(jambFront);
+
+    const jambTop = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 0.94), doorFrameMat);
+    jambTop.position.set(-1.76, 2.1, -1.65);
+    roomGroup.add(jambTop);
+
+    const threshold = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.015, 0.94), metalMat);
+    threshold.position.set(-1.76, 0.008, -1.65);
+    roomGroup.add(threshold);
+
+    // Outside Hallway / Corridor (Wide, bright, realistic residential corridor)
+    const corridorFloorMat = new THREE.MeshStandardMaterial({ color: 0xded7cc, roughness: 0.4 });
+    const corridorWallMat = new THREE.MeshStandardMaterial({ color: 0xf1ece4, roughness: 0.6 });
+
+    // Corridor Floor (Spans Z from -0.8 to -3.2, X from -1.8 to -2.8)
+    const corridorFloor = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.12, 2.6), corridorFloorMat);
+    corridorFloor.position.set(-2.35, -0.06, -2.0);
+    corridorFloor.receiveShadow = true;
+    roomGroup.add(corridorFloor);
+
+    // Corridor Back Wall (Facing +X towards doorway)
+    const corridorWallBack = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.6, 2.6), corridorWallMat);
+    corridorWallBack.position.set(-2.9, 1.3, -2.0);
+    roomGroup.add(corridorWallBack);
+
+    // Corridor End Wall (North end)
+    const corridorWallEnd = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.6, 0.1), corridorWallMat);
+    corridorWallEnd.position.set(-2.35, 1.3, -3.25);
+    roomGroup.add(corridorWallEnd);
+
+    // Corridor Warm Ceiling Downlight & Wall Sconce
+    const hallLight = new THREE.PointLight(0xffedd5, 1.6, 6.0);
+    hallLight.position.set(-2.35, 2.3, -2.0);
+    hallLight.castShadow = true;
+    roomGroup.add(hallLight);
+
+    // Sconce Lamp Fixture on Corridor Wall
+    const sconceMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 });
+    const sconceBase = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.16, 0.1), sconceMat);
+    sconceBase.position.set(-2.84, 1.8, -2.0);
+    roomGroup.add(sconceBase);
+    const sconceGlow = new THREE.Mesh(
+      new THREE.SphereGeometry(0.05, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xffedd5 })
+    );
+    sconceGlow.position.set(-2.8, 1.8, -2.0);
+    roomGroup.add(sconceGlow);
+
+    // Apartment Number Plate '802' on Corridor Wall
+    const plateMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.02, 0.08, 0.18),
+      new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85, roughness: 0.2 })
+    );
+    plateMesh.position.set(-2.84, 1.5, -1.65);
+    roomGroup.add(plateMesh);
+
+    // Entry Welcome Mat inside the door
+    const welcomeMat = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(0.48, 0.01, 0.76, 3, 0.01),
+      new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.9 })
+    );
+    welcomeMat.position.set(-1.38, 0.005, -1.65);
+    welcomeMat.receiveShadow = true;
+    roomGroup.add(welcomeMat);
+
     // --- DYNAMIC KINEMATIC ENTRANCE DOOR ---
     const doorHingeGroup = new THREE.Group();
-    doorHingeGroup.position.set(-1.72, 0, -2.1); // Hinge pivot axis
+    doorHingeGroup.position.set(-1.74, 0, -2.08); // Precision hinge axis
 
-    const doorArchitrave = new THREE.Mesh(
-      new THREE.BoxGeometry(0.06, 2.14, 0.94),
-      new THREE.MeshStandardMaterial({ color: 0x3d3027 })
-    );
-    doorArchitrave.position.set(-1.75, 1.07, -1.65);
-    roomGroup.add(doorArchitrave);
-
-    // Door Leaf
-    const doorLeafMat = new THREE.MeshStandardMaterial({ color: 0x5a4436, roughness: 0.65 });
-    const doorLeaf = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.045, 2.08, 0.88, 4, 0.01), doorLeafMat);
-    doorLeaf.position.set(0, 1.04, 0.44);
+    // Door Leaf (realistic wood veneer with molded panel groove)
+    const doorLeafMat = new THREE.MeshStandardMaterial({ color: 0x5a4436, roughness: 0.6 });
+    const doorLeaf = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.045, 2.06, 0.86, 4, 0.01), doorLeafMat);
+    doorLeaf.position.set(0, 1.03, 0.43);
     doorLeaf.castShadow = true;
     doorHingeGroup.add(doorLeaf);
 
-    // Brass Lever Handle
+    // Panel Inset Details (Molded panels on door face)
+    const panelMat = new THREE.MeshStandardMaterial({ color: 0x4a372c, roughness: 0.7 });
+    [0.6, 1.45].forEach(py => {
+      const pInset = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.62, 0.66), panelMat);
+      pInset.position.set(0, py, 0.43);
+      doorHingeGroup.add(pInset);
+    });
+
+    // Dual-Sided Brass Lever Handle & Smart Digital Lock
     const brassMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85, roughness: 0.25 });
-    const hPlate = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.22, 0.05), brassMat);
-    hPlate.position.set(0.03, 1.0, 0.8);
-    doorHingeGroup.add(hPlate);
-    const hLever = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.11), brassMat);
-    hLever.rotation.z = Math.PI / 2;
-    hLever.position.set(0.06, 1.02, 0.8);
-    doorHingeGroup.add(hLever);
+    // Inside Handle
+    const hPlateIn = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.22, 0.05), brassMat);
+    hPlateIn.position.set(0.026, 1.0, 0.76);
+    doorHingeGroup.add(hPlateIn);
+    const hLeverIn = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.11), brassMat);
+    hLeverIn.rotation.z = Math.PI / 2;
+    hLeverIn.position.set(0.06, 1.02, 0.76);
+    doorHingeGroup.add(hLeverIn);
+
+    // Outside Smart Lock Plate
+    const lockMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.15 });
+    const lockPlateOut = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.28, 0.06), lockMat);
+    lockPlateOut.position.set(-0.026, 1.0, 0.76);
+    doorHingeGroup.add(lockPlateOut);
+    const hLeverOut = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.11), lockMat);
+    hLeverOut.rotation.z = -Math.PI / 2;
+    hLeverOut.position.set(-0.06, 1.02, 0.76);
+    doorHingeGroup.add(hLeverOut);
 
     roomGroup.add(doorHingeGroup);
     scene.add(roomGroup);
@@ -1442,7 +1530,7 @@
       raycaster.setFromCamera(mousePos, camera);
 
       // Check door
-      const doorHits = raycaster.intersectObjects([doorLeaf, doorArchitrave], true);
+      const doorHits = raycaster.intersectObjects([doorLeaf, jambRear, jambFront, jambTop], true);
       if (doorHits.length > 0) { toggleDoor(); return; }
 
       // Check bed drawers
