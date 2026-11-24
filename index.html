@@ -1069,6 +1069,37 @@
     lampShade.position.set(-0.46, 1.12, -0.12);
     deskGroup.add(lampShade);
 
+    // Desktop Solid Bookstand & Hardcover Books (Firmly anchored on desktop surface Y=0.77)
+    const bookCaddyMat = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      transmission: 0.9,
+      opacity: 0.85,
+      transparent: true,
+      roughness: 0.1
+    });
+    const bookHolder = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.22, 0.14, 0.26, 3, 0.008), bookCaddyMat);
+    bookHolder.position.set(0.42, 0.84, -0.06);
+    bookHolder.castShadow = true;
+    deskGroup.add(bookHolder);
+
+    const deskBookMats = [
+      new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.6 }), // Navy
+      new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6 }), // Emerald
+      new THREE.MeshStandardMaterial({ color: 0xc2410c, roughness: 0.6 }), // Terracotta
+      new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.6 })  // Ochre
+    ];
+    [
+      { w: 0.035, h: 0.16, d: 0.20, x: 0.35, mat: deskBookMats[0] },
+      { w: 0.030, h: 0.15, d: 0.19, x: 0.39, mat: deskBookMats[1] },
+      { w: 0.040, h: 0.17, d: 0.21, x: 0.43, mat: deskBookMats[2] },
+      { w: 0.032, h: 0.15, d: 0.19, x: 0.47, mat: deskBookMats[3] }
+    ].forEach(b => {
+      const bookMesh = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, b.d), b.mat);
+      bookMesh.position.set(b.x, 0.77 + b.h / 2, -0.06);
+      bookMesh.castShadow = true;
+      deskGroup.add(bookMesh);
+    });
+
     addContactShadow(deskGroup, 1.3, 0.7, 0, 0, 0.65);
     deskGroup.position.set(-1.1, 0, 0.6);
     furnitureGroup.add(deskGroup);
@@ -1234,63 +1265,97 @@
 
     storageGroup.add(bedDrawersGroup);
 
-    // C. Desktop Acrylic Snack Organizer
-    const snackGroup = new THREE.Group();
-    const acrylicMat = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      transmission: 0.92,
-      opacity: 0.85,
-      transparent: true,
-      roughness: 0.1
-    });
-    const caddy = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.22, 0.16, 0.34, 3, 0.008), acrylicMat);
-    caddy.position.set(-0.35, 0.85, 0.1);
-    caddy.castShadow = true;
-    snackGroup.add(caddy);
+    // C. Desktop Books & Vertical Organizer (Anchored inside deskGroup)
 
-    // Colorful snack pouches standing vertically (save 70% desktop space)
-    [0xef4444, 0xf59e0b, 0x10b981, 0x8b5cf6].forEach((col, sidx) => {
-      const snackPouch = new THREE.Mesh(
-        new THREE.BoxGeometry(0.035, 0.14, 0.26),
-        new THREE.MeshStandardMaterial({ color: col, roughness: 0.4 })
-      );
-      snackPouch.position.set(-0.41 + sidx * 0.045, 0.86, 0.1);
-      snackGroup.add(snackPouch);
-    });
-    storageGroup.add(snackGroup);
-
-    // D. Kinematic Cat Station & Airtight Pet Food Bucket
+    // D. Kinematic Cat Living Sanctuary (Sunny floor zone in front of bed: X=0.55, Z=0.65)
     const catStationGroup = new THREE.Group();
-    // Non-slip silicone feeding mat
-    const catMat = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(0.45, 0.01, 0.3, 3, 0.01),
-      new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.8 })
-    );
-    catMat.position.set(-1.42, 0.006, -0.55);
-    catStationGroup.add(catMat);
 
-    // Elevated Bamboo Bowl Stand
-    const bowlStand = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.36, 0.07, 0.16, 3, 0.01), woodMat);
-    bowlStand.position.set(-1.42, 0.045, -0.55);
+    // Round Woven Wool / Sisal Cat Rug (Sunlight spot)
+    const catRugMat = new THREE.MeshStandardMaterial({ color: 0xe5dcce, roughness: 0.95 });
+    const catRug = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.008, 32), catRugMat);
+    catRug.position.set(0.55, 0.004, 0.65);
+    catRug.receiveShadow = true;
+    catStationGroup.add(catRug);
+
+    // Plush Donut Cat Bed
+    const catBedMat = new THREE.MeshStandardMaterial({ color: 0xd7c4ae, roughness: 0.9 });
+    const catBedBase = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.22, 0.05, 24), catBedMat);
+    catBedBase.position.set(0.55, 0.028, 0.65);
+    catBedBase.receiveShadow = true;
+    catStationGroup.add(catBedBase);
+
+    const catBedRim = new THREE.Mesh(
+      new THREE.TorusGeometry(0.20, 0.045, 12, 24),
+      new THREE.MeshStandardMaterial({ color: 0xc8b299, roughness: 0.9 })
+    );
+    catBedRim.rotation.x = Math.PI / 2;
+    catBedRim.position.set(0.55, 0.06, 0.65);
+    catStationGroup.add(catBedRim);
+
+    addContactShadow(catStationGroup, 0.65, 0.65, 0.55, 0.65, 0.6);
+
+    // --- CUTE 3D COMPANION CAT (Curled up sleeping peacefully in cat bed) ---
+    const catCompanion = new THREE.Group();
+    const catFurMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.75 });
+    const catWhiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
+
+    // Cat Body
+    const catBody = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.22, 0.12, 0.28, 4, 0.05), catFurMat);
+    catBody.position.set(0, 0.06, 0);
+    catBody.castShadow = true;
+    catCompanion.add(catBody);
+
+    // Cat Head
+    const catHead = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 16), catFurMat);
+    catHead.position.set(0, 0.12, 0.14);
+    catHead.castShadow = true;
+    catCompanion.add(catHead);
+
+    // Ears
+    [-0.038, 0.038].forEach(ex => {
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.026, 0.05, 4), catFurMat);
+      ear.rotation.y = Math.PI / 4;
+      ear.position.set(ex, 0.19, 0.14);
+      catCompanion.add(ear);
+    });
+
+    // Cute Snout
+    const catSnout = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 12), catWhiteMat);
+    catSnout.position.set(0, 0.10, 0.20);
+    catCompanion.add(catSnout);
+
+    // Curled Tail
+    const catTail = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.02, 8, 16, Math.PI * 1.1), catFurMat);
+    catTail.rotation.x = Math.PI / 2;
+    catTail.position.set(0.06, 0.03, -0.11);
+    catCompanion.add(catTail);
+
+    // Positioned strictly inside the cat bed in the sunny foreground!
+    catCompanion.position.set(0.55, 0.055, 0.65);
+    catCompanion.rotation.y = -0.4;
+    catStationGroup.add(catCompanion);
+
+    // Dual Ceramic Feeding Bowls (Adjacent to cat rug)
+    const bowlStand = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.34, 0.06, 0.15, 3, 0.01), woodMat);
+    bowlStand.position.set(0.08, 0.03, 0.65);
     catStationGroup.add(bowlStand);
 
-    // 2 Ceramic Bowls (Dry food & Fresh water)
-    [-0.08, 0.08].forEach(bx => {
+    [-0.07, 0.07].forEach(bx => {
       const bowl = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.06, 0.045, 0.045, 24),
+        new THREE.CylinderGeometry(0.055, 0.04, 0.04, 24),
         new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.15 })
       );
       bowl.rotation.x = -0.12;
-      bowl.position.set(-1.42 + bx, 0.085, -0.55);
+      bowl.position.set(0.08 + bx, 0.065, 0.65);
       catStationGroup.add(bowl);
     });
 
-    // 10kg Airtight Cat Food Container (White with visual window)
+    // 10kg Airtight Cat Food Container (Neatly beside the aisle)
     const bucketBase = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(0.3, 0.32, 0.4, 4, 0.02),
+      new THREE.RoundedBoxGeometry(0.28, 0.32, 0.38, 4, 0.02),
       new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 })
     );
-    bucketBase.position.set(-1.42, 0.16, -0.92);
+    bucketBase.position.set(0.08, 0.16, 1.15);
     bucketBase.castShadow = true;
     catStationGroup.add(bucketBase);
 
@@ -1299,61 +1364,20 @@
       new THREE.PlaneGeometry(0.04, 0.2),
       new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.2 })
     );
-    bucketGauge.rotation.y = Math.PI / 2;
-    bucketGauge.position.set(-1.268, 0.16, -0.92);
+    bucketGauge.position.set(0.08, 0.16, 1.342);
     catStationGroup.add(bucketGauge);
 
     // Kinematic Bucket Lid (Hinge at rear)
     const bucketLidPivot = new THREE.Group();
-    bucketLidPivot.position.set(-1.42, 0.32, -1.12);
+    bucketLidPivot.position.set(0.08, 0.32, 0.96);
 
     const bucketLid = new THREE.Mesh(
-      new THREE.RoundedBoxGeometry(0.31, 0.035, 0.41, 3, 0.01),
+      new THREE.RoundedBoxGeometry(0.29, 0.035, 0.39, 3, 0.01),
       new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.35 })
     );
-    bucketLid.position.set(0, 0.018, 0.2);
+    bucketLid.position.set(0, 0.018, 0.19);
     bucketLidPivot.add(bucketLid);
     catStationGroup.add(bucketLidPivot);
-
-    // --- CUTE 3D COMPANION CAT (Low-Poly Orange Tabby) ---
-    const catCompanion = new THREE.Group();
-    const catFurMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.75 });
-    const catWhiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
-
-    // Cat Body (loafing comfortably on the sisal mat)
-    const catBody = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.24, 0.15, 0.34, 4, 0.05), catFurMat);
-    catBody.position.set(0, 0.075, 0);
-    catBody.castShadow = true;
-    catCompanion.add(catBody);
-
-    // Cat Head
-    const catHead = new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 16), catFurMat);
-    catHead.position.set(0, 0.15, 0.18);
-    catHead.castShadow = true;
-    catCompanion.add(catHead);
-
-    // Ears
-    [-0.045, 0.045].forEach(ex => {
-      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.06, 4), catFurMat);
-      ear.rotation.y = Math.PI / 4;
-      ear.position.set(ex, 0.23, 0.18);
-      catCompanion.add(ear);
-    });
-
-    // Cute Snout
-    const catSnout = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 12), catWhiteMat);
-    catSnout.position.set(0, 0.13, 0.26);
-    catCompanion.add(catSnout);
-
-    // Curled Tail
-    const catTail = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.025, 8, 16, Math.PI * 1.1), catFurMat);
-    catTail.rotation.x = Math.PI / 2;
-    catTail.position.set(0.08, 0.03, -0.15);
-    catCompanion.add(catTail);
-
-    catCompanion.position.set(-0.2, 0.005, -0.5);
-    catCompanion.rotation.y = -0.5;
-    catStationGroup.add(catCompanion);
 
     storageGroup.add(catStationGroup);
     scene.add(storageGroup);
@@ -1431,7 +1455,7 @@
       {
         id: 'hs-snack',
         title: '🍿 桌面分层零食立插盒',
-        pos: new THREE.Vector3(-0.35, 0.95, 0.6),
+        pos: new THREE.Vector3(-0.68, 0.98, 0.54),
         data: {
           title: '🍿 亚克力阶梯式零食收纳架',
           pos: '书桌右上角死角',
@@ -1444,7 +1468,7 @@
       {
         id: 'hs-cat',
         title: '🐱 猫咪防潮密封粮桶角',
-        pos: new THREE.Vector3(-1.42, 0.38, -0.92),
+        pos: new THREE.Vector3(0.55, 0.25, 0.65),
         data: {
           title: '🐱 10kg 气阀式防潮密封储粮桶',
           pos: '门后角落安全区',
@@ -1557,7 +1581,7 @@
       }
 
       // Check snacks
-      const snackHits = raycaster.intersectObjects(snackGroup.children, true);
+      const snackHits = raycaster.intersectObjects([bookHolder], true);
       if (snackHits.length > 0) {
         openDrawer(hotspotsData[2].data);
         return;
@@ -1578,7 +1602,7 @@
       else if (mode === 'racket') tweenCam({ x: -0.2, y: 2.0, z: -0.3 }, { x: -1.7, y: 1.6, z: -0.6 });
       else if (mode === 'bed') tweenCam({ x: -0.5, y: 1.4, z: -1.0 }, { x: 0.9, y: 0.25, z: -1.25 });
       else if (mode === 'desk') tweenCam({ x: -0.2, y: 1.5, z: 1.0 }, { x: -1.1, y: 0.85, z: 0.6 });
-      else if (mode === 'cat') tweenCam({ x: -0.4, y: 1.2, z: -0.6 }, { x: -1.4, y: 0.25, z: -0.75 });
+      else if (mode === 'cat') tweenCam({ x: 0.55, y: 1.3, z: 1.5 }, { x: 0.55, y: 0.15, z: 0.65 });
       else if (mode === 'top') tweenCam({ x: 0.01, y: 8.5, z: 0.01 }, { x: 0, y: 0, z: 0 });
     }
 
