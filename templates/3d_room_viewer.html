@@ -1,0 +1,3156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>超精细高保真室内收纳 3D 动力学仿真与空间计算系统</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-font-smoothing: antialiased; }
+    body { overflow: hidden; background: #090b10; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "PingFang SC", sans-serif; }
+    #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
+    .hud-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+
+    /* Top Bar */
+    .top-bar { position: absolute; top: 14px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; pointer-events: none; }
+    .brand-badge { pointer-events: auto; background: rgba(15, 23, 42, 0.86); backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 9px 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .brand-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #f8fafc; }
+    .brand-title span.tag { font-size: 10px; padding: 2px 6px; border-radius: 5px; background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); font-weight: 600; }
+    .brand-title span.style-tag { font-size: 10px; padding: 2px 6px; border-radius: 5px; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.4); font-weight: 600; }
+    .brand-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+    .top-actions { pointer-events: auto; display: flex; gap: 7px; align-items: center; background: rgba(15, 23, 42, 0.86); backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 5px 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .k-btn { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.11); color: #e2e8f0; font-size: 12px; padding: 7px 11px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.18s ease; font-weight: 500; white-space: nowrap; }
+    .k-btn:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.28); color: #fff; }
+    .k-btn.active { background: #0284c7; border-color: #38bdf8; color: #ffffff; box-shadow: 0 0 12px rgba(56, 189, 248, 0.35); }
+    .k-btn.warn-active { background: #d97706; border-color: #fbbf24; color: #fff; box-shadow: 0 0 12px rgba(251, 191, 36, 0.35); }
+    .ar-btn { background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: 1px solid rgba(52, 211, 153, 0.5); color: #ffffff; font-size: 12px; padding: 7px 13px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .ar-btn:hover { filter: brightness(1.08); }
+
+    /* Left Vertical Pro Tool Dock */
+    .left-dock { position: absolute; top: 78px; left: 16px; width: 118px; background: rgba(15, 23, 42, 0.86); backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 8px; display: flex; flex-direction: column; gap: 5px; pointer-events: auto; box-shadow: 0 12px 30px rgba(0,0,0,0.42); }
+    .dock-label { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 4px; }
+    .dock-sep { height: 1px; background: rgba(255, 255, 255, 0.09); margin: 3px 0; }
+    .dock-btn { width: 100%; justify-content: flex-start; padding: 7px 9px; font-size: 11.5px; }
+
+    /* Contextual Mode Banner (Top Center) */
+    .mode-banner { position: absolute; top: 72px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(20px); border: 1px solid rgba(56, 189, 248, 0.45); border-radius: 12px; padding: 8px 14px; display: none; align-items: center; gap: 9px; pointer-events: auto; z-index: 25; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-size: 12px; color: #e2e8f0; white-space: nowrap; }
+    .mode-banner.show { display: flex; }
+    .mode-banner.danger { border-color: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.45); }
+    .mode-banner.ok { border-color: #10b981; }
+    .mode-pill-btn { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22); color: #fff; padding: 4px 9px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: 600; }
+    .mode-pill-btn:hover { background: #2563eb; border-color: #60a5fa; }
+    .mode-pill-btn.danger { background: rgba(239, 68, 68, 0.25); border-color: #f87171; }
+
+    /* Walkthrough D-Pad */
+    .walk-pad { position: absolute; bottom: 72px; left: 148px; display: none; grid-template-columns: repeat(3, 34px); grid-template-rows: repeat(2, 34px); gap: 4px; pointer-events: auto; background: rgba(15, 23, 42, 0.85); padding: 6px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); z-index: 25; }
+    .walk-pad.show { display: grid; }
+    .pad-key { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.16); color: #fff; border-radius: 6px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .pad-key:active { background: #2563eb; }
+
+    /* ViewCube Overlay Frame */
+    .viewcube-box { position: absolute; top: 74px; right: 18px; width: 92px; height: 92px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(15, 23, 42, 0.28); pointer-events: auto; cursor: pointer; z-index: 15; }
+    .viewcube-label { position: absolute; bottom: 2px; left: 0; width: 100%; text-align: center; font-size: 9.5px; color: #94a3b8; pointer-events: none; }
+
+    /* Bottom-Right 2D Live Floorplan Minimap */
+    .minimap-card { position: absolute; bottom: 16px; right: 16px; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 14px; padding: 8px; pointer-events: auto; z-index: 20; box-shadow: 0 12px 30px rgba(0,0,0,0.45); }
+    .minimap-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px; font-weight: 600; color: #cbd5e1; padding: 0 2px; }
+    .minimap-toggle { background: rgba(255,255,255,0.1); border: none; color: #94a3b8; border-radius: 5px; padding: 2px 6px; font-size: 10px; cursor: pointer; }
+    .minimap-toggle:hover { color: #fff; background: rgba(255,255,255,0.2); }
+    #minimap-canvas { display: block; border-radius: 8px; background: #0b1120; border: 1px solid rgba(255,255,255,0.08); cursor: crosshair; }
+    .minimap-card.collapsed #minimap-canvas { display: none; }
+    .minimap-card.collapsed .minimap-head { margin-bottom: 0; gap: 8px; }
+
+    /* Bottom Camera Bar */
+    .bottom-bar { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); pointer-events: auto; z-index: 15; }
+    .camera-tabs { display: flex; gap: 4px; background: rgba(15, 23, 42, 0.86); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.42); }
+    .cam-btn { background: transparent; border: none; color: #94a3b8; font-size: 11.5px; padding: 7px 11px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: 500; white-space: nowrap; }
+    .cam-btn:hover { color: #f8fafc; background: rgba(255, 255, 255, 0.08); }
+    .cam-btn.active { background: #2563eb; color: #ffffff; box-shadow: 0 2px 10px rgba(37, 99, 235, 0.4); }
+
+    /* 3D Hotspots & Measurement Labels */
+    .hotspot, .measure-badge { position: absolute; top: 0; left: 0; transform: translate(-50%, -50%); pointer-events: auto; cursor: pointer; z-index: 20; }
+    .hotspot-pill { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); border: 1px solid #38bdf8; color: #ffffff; font-size: 11px; padding: 4px 10px; border-radius: 14px; box-shadow: 0 0 12px rgba(56, 189, 248, 0.35); font-weight: 600; white-space: nowrap; }
+    .hotspot-pill:hover { transform: scale(1.06); background: #0284c7; border-color: #fff; }
+    .hotspot.hidden { display: none !important; }
+    .measure-pill { background: rgba(6, 78, 59, 0.95); border: 1.5px solid #34d399; color: #ecfdf5; font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 10px; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+
+    /* Side Drawers */
+    .drawer-panel { position: absolute; top: 74px; right: 16px; width: 344px; max-height: calc(100vh - 332px); overflow-y: auto; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 16px; padding: 18px; box-shadow: 0 20px 45px rgba(0,0,0,0.6); pointer-events: auto; transform: translateX(390px); opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 35; }
+    .drawer-panel.show { transform: translateX(0); opacity: 1; }
+    .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 9px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+    .drawer-title { font-size: 14px; font-weight: 700; color: #38bdf8; }
+    .drawer-close { background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; }
+    .drawer-close:hover { color: #fff; }
+    .drawer-row { margin-bottom: 10px; }
+    .drawer-lbl { font-size: 11px; color: #94a3b8; margin-bottom: 2px; }
+    .drawer-val { font-size: 12.5px; color: #e2e8f0; font-weight: 500; line-height: 1.4; }
+    .drawer-price { font-size: 18px; font-weight: 800; color: #10b981; }
+
+    /* Style Switcher & BOM */
+    .style-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .style-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 9px; cursor: pointer; transition: all 0.18s; }
+    .style-card:hover { background: rgba(255,255,255,0.1); }
+    .style-card.active { background: rgba(37, 99, 235, 0.22); border-color: #38bdf8; box-shadow: 0 0 12px rgba(56, 189, 248, 0.25); }
+    .style-card-title { font-size: 12px; font-weight: 700; color: #f8fafc; }
+    .style-card-sub { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+    .bom-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+    .bom-item { display: flex; align-items: flex-start; gap: 8px; background: rgba(255,255,255,0.04); padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.07); font-size: 12px; cursor: pointer; }
+    .bom-item input { margin-top: 3px; cursor: pointer; accent-color: #10b981; }
+    .bom-item.checked .bom-name { text-decoration: line-through; color: #64748b; }
+    .bom-info { flex: 1; }
+    .bom-name { font-weight: 600; color: #e2e8f0; }
+    .bom-spec { font-size: 10.5px; color: #94a3b8; margin-top: 2px; }
+    .bom-cost { font-weight: 700; color: #10b981; white-space: nowrap; }
+
+    /* Analytics Panel */
+    .analytics-panel { position: absolute; top: 78px; left: 144px; width: 280px; background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(22px); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 14px; padding: 16px; box-shadow: 0 18px 40px rgba(0,0,0,0.5); pointer-events: auto; z-index: 30; display: none; }
+    .analytics-panel.show { display: block; }
+    .ap-title { font-size: 13.5px; font-weight: 700; color: #60a5fa; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .meter-box { margin-bottom: 10px; }
+    .meter-label { display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 4px; color: #cbd5e1; }
+    .meter-track { height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; }
+    .meter-fill { height: 100%; background: linear-gradient(90deg, #38bdf8, #3b82f6); border-radius: 3px; }
+
+    /* AR Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); z-index: 100; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal-card { background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px; padding: 26px; width: 440px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); text-align: center; }
+    .modal-title { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .modal-desc { font-size: 12.5px; color: #94a3b8; line-height: 1.6; margin-bottom: 18px; }
+    .qr-placeholder { background: #1e293b; border: 2px dashed #38bdf8; border-radius: 12px; padding: 22px; margin-bottom: 18px; font-size: 12.5px; color: #38bdf8; }
+    .ar-btn-action { background: #2563eb; color: #fff; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 13px; }
+    .ar-btn-action:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <!-- HUD Layer -->
+  <div class="hud-layer">
+    <div class="top-bar">
+      <div class="brand-badge">
+        <div class="brand-title">
+          🏡 室内收纳 3D 动力学与空间规划工作台
+          <span class="tag">Pro Controls</span>
+          <span id="active-style-badge" class="style-tag">v2.2 治愈原木</span>
+        </div>
+        <div class="brand-sub">1:1 实景尺度 · 3D 激光测距 · 第一人称/猫视角 · 自由摆位碰撞检测 · 2D 实时户型图</div>
+      </div>
+
+      <div class="top-actions">
+        <button id="t-daynight" class="k-btn" onclick="toggleDayNight()">🌙 夜晚开灯</button>
+        <button id="k-walls" class="k-btn active" onclick="toggleWallCutaway()">🧱 智能剖切</button>
+        <button id="k-hotspots" class="k-btn active" onclick="toggleHotspots()">👁️ 标牌</button>
+        <button id="t-stylebom" class="k-btn" onclick="toggleStyleBomDrawer()">🎨 风格与清单</button>
+        <button id="t-analytics" class="k-btn" onclick="toggleAnalytics()">📊 利用率</button>
+        <button class="ar-btn" onclick="openARModal()">📱 1:1 AR</button>
+      </div>
+    </div>
+
+    <div class="left-dock">
+      <div class="dock-label">空间工具</div>
+      <button id="t-measure" class="k-btn dock-btn" onclick="toggleMeasureMode()">📏 激光测距</button>
+      <button id="t-layout" class="k-btn dock-btn" onclick="toggleLayoutMode()">🖱️ 摆位编辑</button>
+      <button id="t-walk" class="k-btn dock-btn" onclick="toggleWalkMode('human')">🚶 真人漫游</button>
+      <button id="t-catview" class="k-btn dock-btn" onclick="toggleWalkMode('cat')">🐾 猫咪视角</button>
+      <div class="dock-sep"></div>
+      <div class="dock-label">机械交互</div>
+      <button id="k-door" class="k-btn dock-btn" onclick="toggleDoor()">🚪 开/关门</button>
+      <button id="k-drawer" class="k-btn dock-btn" onclick="toggleDrawer()">🛏️ 床底扁箱</button>
+      <button id="k-curtain" class="k-btn dock-btn" onclick="toggleCurtain()">🧼 防尘帘</button>
+      <button id="k-bucket" class="k-btn dock-btn" onclick="toggleCatBucket()">🐱 粮桶盖</button>
+    </div>
+
+    <div id="mode-banner" class="mode-banner"></div>
+
+    <div id="walk-pad" class="walk-pad">
+      <div></div>
+      <button class="pad-key" onpointerdown="setPadKey('w',true)" onpointerup="setPadKey('w',false)" onpointerleave="setPadKey('w',false)">▲</button>
+      <div></div>
+      <button class="pad-key" onpointerdown="setPadKey('a',true)" onpointerup="setPadKey('a',false)" onpointerleave="setPadKey('a',false)">◄</button>
+      <button class="pad-key" onpointerdown="setPadKey('s',true)" onpointerup="setPadKey('s',false)" onpointerleave="setPadKey('s',false)">▼</button>
+      <button class="pad-key" onpointerdown="setPadKey('d',true)" onpointerup="setPadKey('d',false)" onpointerleave="setPadKey('d',false)">►</button>
+    </div>
+
+    <div id="viewcube-overlay" class="viewcube-box" title="点击三维魔方各面切换视角">
+      <div class="viewcube-label">视角魔方</div>
+    </div>
+
+    <div class="bottom-bar">
+      <div class="camera-tabs">
+        <button class="cam-btn" data-cam="iso" onclick="setCam('iso')">🏠 全景</button>
+        <button class="cam-btn" data-cam="wardrobe" onclick="setCam('wardrobe')">👗 衣柜与箱</button>
+        <button class="cam-btn" data-cam="bed" onclick="setCam('bed')">🛏️ 床底扁箱</button>
+        <button class="cam-btn" data-cam="desk" onclick="setCam('desk')">🖥️ 书桌</button>
+        <button class="cam-btn" data-cam="cat" onclick="setCam('cat')">🐱 猫咪角</button>
+        <button class="cam-btn" data-cam="racket" onclick="setCam('racket')">🏸 门后球拍</button>
+        <button class="cam-btn" data-cam="top" onclick="setCam('top')">📐 顶视</button>
+      </div>
+    </div>
+
+    <div id="minimap-card" class="minimap-card">
+      <div class="minimap-head">
+        <span>🗺️ 2D 实时户型图</span>
+        <button class="minimap-toggle" onclick="toggleMinimap()">收起/展开</button>
+      </div>
+      <canvas id="minimap-canvas" width="156" height="202" title="点击户型图可快速定位视角"></canvas>
+    </div>
+  </div>
+
+  <div id="analytics-panel" class="analytics-panel">
+    <div class="ap-title">
+      <span>📦 3D 空间装箱运筹分析</span>
+      <span style="font-size:11px; color:#38bdf8;">GB 50096 达标</span>
+    </div>
+    <div class="meter-box">
+      <div class="meter-label"><span>空间死角消除率</span><span style="color:#38bdf8; font-weight:700;">96.4%</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:96.4%;"></div></div>
+    </div>
+    <div class="meter-box">
+      <div class="meter-label"><span>床底暗容积释放 (22cm净高)</span><span style="color:#10b981; font-weight:700;">0.44 m³</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:88%; background:#10b981;"></div></div>
+    </div>
+    <div class="meter-box">
+      <div class="meter-label"><span>东墙立体衣柜+行李库位</span><span style="color:#3b82f6; font-weight:700;">1.54 m³</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:94%; background:#3b82f6;"></div></div>
+    </div>
+    <div class="meter-box">
+      <div class="meter-label"><span>门后垂直立面收纳</span><span style="color:#f59e0b; font-weight:700;">0.32 m³</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:76%; background:#f59e0b;"></div></div>
+    </div>
+    <div class="meter-box">
+      <div class="meter-label"><span>主行动线净宽</span><span style="color:#a855f7; font-weight:700;">165 cm (超宽合规)</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:100%; background:#a855f7;"></div></div>
+    </div>
+    <div class="meter-box" style="margin-bottom:0;">
+      <div class="meter-label"><span>猫咪安全活动与避让率</span><span style="color:#ec4899; font-weight:700;">100%</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:100%; background:#ec4899;"></div></div>
+    </div>
+  </div>
+
+  <div id="drawer" class="drawer-panel">
+    <div class="drawer-header">
+      <div id="d-title" class="drawer-title">📦 收纳选品详情</div>
+      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div class="drawer-row"><div class="drawer-lbl">收纳品类与位置</div><div id="d-pos" class="drawer-val"></div></div>
+    <div class="drawer-row"><div class="drawer-lbl">工程物理规格 (长x宽x高)</div><div id="d-size" class="drawer-val"></div></div>
+    <div class="drawer-row"><div class="drawer-lbl">猫咪防破坏设计</div><div id="d-cat" class="drawer-val"></div></div>
+    <div class="drawer-row"><div class="drawer-lbl">选品材质与安装</div><div id="d-mat" class="drawer-val"></div></div>
+    <div class="drawer-row" style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.1);">
+      <div><div class="drawer-lbl">预估参考采购价</div><div id="d-price" class="drawer-price"></div></div>
+      <button style="background:#2563eb; color:#fff; border:none; padding:8px 14px; border-radius:8px; font-weight:600; font-size:12px; cursor:pointer;" onclick="toggleStyleBomDrawer()">查看整屋 BOM 清单</button>
+    </div>
+  </div>
+
+  <div id="style-bom-drawer" class="drawer-panel">
+    <div class="drawer-header">
+      <div class="drawer-title">🎨 风格换装与动态采购清单</div>
+      <button class="drawer-close" onclick="closeStyleBomDrawer()">✕</button>
+    </div>
+    <div class="drawer-lbl" style="margin-bottom:6px;">一键切换整屋材质与灯光风格（门窗床位硬装 100% 锁死零改动）</div>
+    <div class="style-grid">
+      <div class="style-card active" data-style="muji" onclick="applyRoomStyle('muji')">
+        <div class="style-card-title">🪵 v2.2 治愈原木</div>
+        <div class="style-card-sub">暖白橡木 · 磨砂半透箱</div>
+      </div>
+      <div class="style-card" data-style="basic" onclick="applyRoomStyle('basic')">
+        <div class="style-card-title">⚡ v1.0 极简免打孔</div>
+        <div class="style-card-sub">轻量实用 · 预算极省</div>
+      </div>
+      <div class="style-card" data-style="tech" onclick="applyRoomStyle('tech')">
+        <div class="style-card-title">🕶️ v2.0 黑金机能</div>
+        <div class="style-card-sub">哑光炭黑 · 暖金氛围</div>
+      </div>
+      <div class="style-card" data-style="camping" onclick="applyRoomStyle('camping')">
+        <div class="style-card-title">⛺ v2.1 都市露营</div>
+        <div class="style-card-sub">山系军绿 · 剑麻耐抓</div>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <div class="drawer-lbl" style="margin:0; font-weight:700; color:#cbd5e1;">🛒 采购清单</div>
+      <span id="bom-total-badge" style="font-size:12px; font-weight:700; color:#10b981;">合计: ¥0</span>
+    </div>
+    <div id="bom-list" class="bom-list"></div>
+    <button style="width:100%; background:#0284c7; color:#fff; border:none; padding:9px 14px; border-radius:9px; font-weight:600; font-size:12px; cursor:pointer;" onclick="copyBomMarkdown()">📋 复制采购清单 (Markdown)</button>
+  </div>
+
+  <div id="ar-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div class="modal-title">📱 手机 1:1 AR 空间实景透视</div>
+        <button style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;" onclick="closeARModal()">✕</button>
+      </div>
+      <div class="modal-desc">利用 Apple ARKit / WebXR 空间锚定，直接在你的 iPhone/iPad 上把 1:1 虚拟衣柜与收纳箱投射到真实房间，实测门窗床边物理间隙！</div>
+      <div class="qr-placeholder">
+        <div style="font-size:24px; margin-bottom:8px;">📲</div>
+        <div>同 WiFi 手机浏览器访问：</div>
+        <div style="font-weight:700; font-size:15px; margin-top:4px; color:#fff;">http://192.168.5.55:8080/room_pro_design_3d.html</div>
+      </div>
+      <button class="ar-btn-action" onclick="exportUSDZ()">⬇️ 直接导出 Apple AR 格式 (.usdz)</button>
+    </div>
+  </div>
+  <!-- Scripts -->
+  <script src="./libs/three.min.js"></script>
+  <script src="./libs/OrbitControls.js"></script>
+  <script src="./libs/RoundedBoxGeometry.js"></script>
+  <script src="./libs/tween.umd.js"></script>
+  <script src="./libs/USDZExporter.js"></script>
+  <script>
+    // --- 1. Synthesized Web Audio Sound Effects ---
+    let audioCtx = null;
+    function getAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      return audioCtx;
+    }
+
+    function playClickSound() {
+      try {
+        const ctx = getAudio();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.08);
+      } catch (e) {}
+    }
+
+    function playGlideSound() {
+      try {
+        const ctx = getAudio();
+        const bufSize = ctx.sampleRate * 0.35;
+        const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufSize * 0.4));
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(650, ctx.currentTime);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        noise.start();
+      } catch (e) {}
+    }
+
+    // --- 2. High-Detail Procedural Textures ---
+    function createTileTextures() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024; canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ece7df';
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      const imgData = ctx.getImageData(0, 0, 1024, 1024);
+      for (let i = 0; i < imgData.data.length; i += 4) {
+        const n = (Math.random() - 0.5) * 10;
+        imgData.data[i] = Math.min(255, Math.max(0, imgData.data[i] + n));
+        imgData.data[i+1] = Math.min(255, Math.max(0, imgData.data[i+1] + n));
+        imgData.data[i+2] = Math.min(255, Math.max(0, imgData.data[i+2] + n));
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      ctx.strokeStyle = '#c5baaa';
+      ctx.lineWidth = 3;
+      for (let i = 0; i <= 1024; i += 256) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 1024); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1024, i); ctx.stroke();
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(3, 4);
+      return tex;
+    }
+
+    function createWoodTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512; canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#c2996c';
+      ctx.fillRect(0, 0, 512, 512);
+      for (let i = 0; i < 65; i++) {
+        ctx.fillStyle = 'rgba(105, 68, 28, ' + (0.04 + Math.random() * 0.1) + ')';
+        ctx.fillRect(0, Math.random() * 512, 512, 1.5 + Math.random() * 5);
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    function createLinenTexture(baseHex = '#ede8df', stripeHex = 'rgba(120,110,95,0.08)') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256; canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = baseHex;
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.strokeStyle = stripeHex;
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 256; i += 4) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 256); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(256, i); ctx.stroke();
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(3, 3);
+      return tex;
+    }
+
+    function createMonitorScreenTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 640; canvas.height = 360;
+      const ctx = canvas.getContext('2d');
+
+      // Deep indigo wallpaper gradient
+      const grad = ctx.createLinearGradient(0, 0, 640, 360);
+      grad.addColorStop(0, '#0f172a');
+      grad.addColorStop(0.6, '#1e293b');
+      grad.addColorStop(1, '#1e3a8a');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 640, 360);
+
+      // Subtle glowing orb
+      const glow = ctx.createRadialGradient(480, 120, 10, 480, 120, 180);
+      glow.addColorStop(0, 'rgba(56, 189, 248, 0.35)');
+      glow.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, 640, 360);
+
+      // Left Sidebar Window
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.fillRect(36, 36, 160, 270);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(50, 56, 70, 8);
+      for (let r = 0; r < 6; r++) {
+        ctx.fillStyle = r === 1 ? 'rgba(56,189,248,0.3)' : 'rgba(255,255,255,0.08)';
+        ctx.fillRect(46, 84 + r * 30, 140, 20);
+      }
+
+      // Main Canvas Card
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.88)';
+      ctx.fillRect(212, 36, 392, 270);
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(232, 56, 120, 10);
+      // Grid chart lines inside
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+      for (let g = 0; g < 4; g++) {
+        ctx.beginPath(); ctx.moveTo(232, 110 + g * 44); ctx.lineTo(580, 110 + g * 44); ctx.stroke();
+      }
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(232, 230); ctx.lineTo(310, 190); ctx.lineTo(390, 210); ctx.lineTo(480, 130); ctx.lineTo(575, 110);
+      ctx.stroke();
+
+      // Bottom Dock
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+      ctx.fillRect(200, 326, 240, 22);
+      ['#38bdf8', '#10b981', '#f59e0b', '#ec4899', '#a855f7'].forEach((c, i) => {
+        ctx.fillStyle = c;
+        ctx.fillRect(220 + i * 44, 330, 16, 14);
+      });
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function createTabbyFurTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256; canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#e07b28';
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.fillStyle = '#b45309';
+      for (let i = 0; i < 256; i += 32) {
+        ctx.fillRect(0, i, 256, 11);
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    function createKibbleTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128; canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#5c3a21';
+      ctx.fillRect(0, 0, 128, 128);
+      for (let i = 0; i < 90; i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#784826' : '#422815';
+        ctx.beginPath();
+        ctx.arc(Math.random() * 128, Math.random() * 128, 3 + Math.random() * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function createRadialShadowTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256; canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(128, 128, 10, 128, 128, 120);
+      grad.addColorStop(0, 'rgba(0,0,0,0.62)');
+      grad.addColorStop(0.35, 'rgba(0,0,0,0.28)');
+      grad.addColorStop(0.7, 'rgba(0,0,0,0.07)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 256, 256);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    const shadowTex = createRadialShadowTexture();
+    function addContactShadow(parent, w, d, x, z, opacity = 0.7) {
+      const plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(w, d),
+        new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity: opacity, depthWrite: false })
+      );
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.set(x, 0.003, z);
+      plane.userData.isShadow = true;
+      parent.add(plane);
+    }
+
+    // --- 2B. Declarative Room Spec Configuration (Data-Driven Architecture) ---
+    const DEFAULT_ROOM_SPEC = {
+      meta: { title: "单间出租屋 1:1 零改动收纳空间规划", unit: "meters", petFriendly: true, zeroAlteration: true, styleDefault: "muji" },
+      room: { width: 3.6, depth: 4.8, height: 2.6, cutawaySides: ["east", "south"] },
+      door: { wall: "west", offset: -1.65, width: 0.90, height: 2.10, swing: "inward-north" },
+      window: { wall: "north", offset: 0.50, width: 1.80, sillHeight: 0.85, height: 1.30 },
+      bed: { x: 0.90, z: -1.25, width: 1.52, length: 2.02, clearance: 0.22, rotY: 0, underDrawerSide: "west", underDrawerHeight: 0.188, underDrawerSlide: 0.55 },
+      furniture: {
+        desk: { x: -1.10, z: 0.60, width: 1.20, depth: 0.60, rotY: 0 },
+        chair: { x: -1.10, z: 1.15, rotY: 0 },
+        wardrobe: { x: 1.43, z: 0.85, width: 0.52, length: 1.28, rotY: 0 },
+        catStation: { x: -1.48, z: -0.45, rotY: 0 },
+        racketMount: { x: -1.70, z: -0.60, hookY: 1.80, rotY: 0 },
+        rug: { x: -0.18, z: 0.68, width: 1.00, length: 1.95, rotY: 0 }
+      }
+    };
+    /*__ROOM_SPEC_INJECT__*/
+    const S = Object.assign({}, DEFAULT_ROOM_SPEC, window.ROOM_SPEC || {});
+    const RW = Number(S.room.width || 3.6);
+    const RD = Number(S.room.depth || 4.8);
+    const RH = Number(S.room.height || 2.6);
+    const HX = RW * 0.5;
+    const HZ = RD * 0.5;
+    const CUTAWAY_SET = new Set((S.room && S.room.cutawaySides) || ["east", "south"]);
+    if (S.meta && S.meta.title) {
+      const bt = document.querySelector('.brand-title');
+      if (bt && bt.firstChild) bt.firstChild.textContent = '🏡 ' + S.meta.title + ' ';
+    }
+
+    // --- 3. Scene, Camera, Renderer ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0f17);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(4.2, 4.7, 4.7);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    renderer.autoClear = false;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.maxPolarAngle = Math.PI / 2 - 0.04;
+    controls.minDistance = 0.6;
+    controls.maxDistance = 16;
+    controls.target.set(0, 0.75, 0);
+
+    // Camera Presets Dictionary (shared by button clicks and URL query params)
+    const camPresets = {
+      iso:      { pos: { x: RW * 1.16, y: Math.max(4.0, RW * 1.3), z: RD * 0.98 }, target: { x: 0, y: 0.75, z: 0 } },
+      top:      { pos: { x: 0.01, y: Math.max(6.8, RD * 1.6), z: 0.01 }, target: { x: 0, y: 0, z: 0 } }
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const reqCam = urlParams.get('cam') || 'iso';
+    const initCamPreset = camPresets[reqCam] || camPresets.iso;
+    camera.position.set(initCamPreset.pos.x, initCamPreset.pos.y, initCamPreset.pos.z);
+    controls.target.set(initCamPreset.target.x, initCamPreset.target.y, initCamPreset.target.z);
+    controls.update();
+    document.querySelectorAll('.camera-tabs button').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-cam') === reqCam);
+    });
+
+    // --- 4. Lighting (Natural Daylight + Interior Soft GI Bounce + Desk Lamp Pool) ---
+    const hemiLight = new THREE.HemisphereLight(0xfffaf2, 0xd8cfc2, 0.65);
+    scene.add(hemiLight);
+
+    const ambLight = new THREE.AmbientLight(0xfff7ed, 0.38);
+    scene.add(ambLight);
+
+    // Interior ceiling soft fill & physical ceiling fixture for Night Mode
+    const ceilingFill = new THREE.PointLight(0xfff8ee, 0.55, 9.0);
+    ceilingFill.position.set(0, 2.45, 0.1);
+    scene.add(ceilingFill);
+    // Cutaway ceiling stays completely open without floating disc mesh
+
+    // Sunlight shining in through the North wall window
+    const sunLight = new THREE.DirectionalLight(0xfff2dc, 1.35);
+    sunLight.position.set(2.5, 7.0, -5.5);
+    sunLight.target.position.set(0, 0.5, 0);
+    scene.add(sunLight.target);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 25;
+    sunLight.shadow.camera.left = -4;
+    sunLight.shadow.camera.right = 4;
+    sunLight.shadow.camera.top = 4;
+    sunLight.shadow.camera.bottom = -4;
+    sunLight.shadow.bias = -0.0003;
+    scene.add(sunLight);
+
+    // Warm desk task lamp localized glow
+    const deskLight = new THREE.PointLight(0xffb85c, 0.85, 2.6);
+    deskLight.position.set(-1.52, 1.06, 0.48);
+    deskLight.castShadow = true;
+    scene.add(deskLight);
+
+    // --- 5. Parametric Room Architectural Envelope (Any dimensions, door wall, window wall, cutaway) ---
+    const roomGroup = new THREE.Group();
+
+    const floorTileTex = createTileTextures();
+    floorTileTex.repeat.set(Math.max(2, Math.round(RW * 0.85)), Math.max(2, Math.round(RD * 0.85)));
+    const floorMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(RW, 0.16, RD),
+      new THREE.MeshStandardMaterial({ map: floorTileTex, roughness: 0.35, metalness: 0.05 })
+    );
+    floorMesh.position.set(0, -0.08, 0);
+    floorMesh.receiveShadow = true;
+    roomGroup.add(floorMesh);
+
+    const curbMat = new THREE.MeshStandardMaterial({ color: 0x2d3748, roughness: 0.8 });
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0xf5f2eb, roughness: 0.92 });
+    const skirtingMat = new THREE.MeshStandardMaterial({ color: 0x524438, roughness: 0.65 });
+    const socketFaceMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+    const sillMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25 });
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.7, roughness: 0.3 });
+    const glassMat = new THREE.MeshPhysicalMaterial({ color: 0xbfdbfe, transmission: 0.9, opacity: 0.55, transparent: true, roughness: 0.1 });
+    const doorFrameMat = new THREE.MeshStandardMaterial({ color: 0x3d3027, roughness: 0.5 });
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
+    const brassMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85, roughness: 0.25 });
+    const doorLeafMat = new THREE.MeshStandardMaterial({ color: 0x5a4436, roughness: 0.6 });
+    const panelMat = new THREE.MeshStandardMaterial({ color: 0x4a372c, roughness: 0.7 });
+    const lockMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.15 });
+
+    const cutawayWallGroups = { north: new THREE.Group(), south: new THREE.Group(), west: new THREE.Group(), east: new THREE.Group() };
+    let doorHingeGroup = new THREE.Group();
+    let doorLeaf, jambRear, jambFront, jambTop;
+
+    const wallDefs = [
+      { side: 'north', len: RW, pos: [0, 0, -HZ], rotY: 0,    tFromWorld: v => v },
+      { side: 'south', len: RW, pos: [0, 0,  HZ], rotY: Math.PI, tFromWorld: v => -v },
+      { side: 'west',  len: RD, pos: [-HX, 0, 0], rotY: Math.PI / 2,  tFromWorld: v => -v },
+      { side: 'east',  len: RD, pos: [ HX, 0, 0], rotY: -Math.PI / 2, tFromWorld: v => v }
+    ];
+
+    wallDefs.forEach(wd => {
+      const wallStatic = new THREE.Group();
+      wallStatic.position.set(...wd.pos);
+      wallStatic.rotation.y = wd.rotY;
+
+      const isCut = CUTAWAY_SET.has(wd.side);
+      const upperTarget = isCut ? cutawayWallGroups[wd.side] : wallStatic;
+      if (isCut) {
+        cutawayWallGroups[wd.side].position.set(...wd.pos);
+        cutawayWallGroups[wd.side].rotation.y = wd.rotY;
+        roomGroup.add(cutawayWallGroups[wd.side]);
+
+        // Architectural cutaway floor rim
+        const curb = new THREE.Mesh(new THREE.BoxGeometry(wd.len + 0.16, 0.10, 0.16), curbMat);
+        curb.position.set(0, 0.05, 0);
+        wallStatic.add(curb);
+      }
+
+      // Gather openings along wall-local tangent coordinate t in [-len/2, +len/2]
+      const ops = [];
+      if (S.door && S.door.wall === wd.side) {
+        const dt = wd.tFromWorld(S.door.offset);
+        ops.push({ type: 'door', t0: dt - S.door.width / 2, t1: dt + S.door.width / 2, tc: dt, y0: 0, y1: S.door.height || 2.10, w: S.door.width });
+      }
+      if (S.window && S.window.wall === wd.side) {
+        const wt = wd.tFromWorld(S.window.offset);
+        const y0 = S.window.sillHeight || 0.85;
+        const y1 = y0 + (S.window.height || 1.30);
+        ops.push({ type: 'window', t0: wt - S.window.width / 2, t1: wt + S.window.width / 2, tc: wt, y0, y1, w: S.window.width });
+      }
+      ops.sort((a, b) => a.t0 - b.t0);
+
+      let cursor = -wd.len / 2 - (wd.side === 'north' || wd.side === 'south' ? 0.08 : 0);
+      const endLimit = wd.len / 2 + (wd.side === 'north' || wd.side === 'south' ? 0.08 : 0);
+      const minBaseY = isCut ? 0.10 : 0;
+
+      ops.forEach(op => {
+        if (op.t0 > cursor + 0.01) {
+          const pw = op.t0 - cursor;
+          const pier = new THREE.Mesh(new THREE.BoxGeometry(pw, RH - minBaseY, 0.16), wallMat);
+          pier.position.set((cursor + op.t0) / 2, minBaseY + (RH - minBaseY) / 2, 0);
+          pier.receiveShadow = true;
+          upperTarget.add(pier);
+
+          const sk = new THREE.Mesh(new THREE.BoxGeometry(pw, 0.10, 0.02), skirtingMat);
+          sk.position.set((cursor + op.t0) / 2, 0.05, 0.09);
+          wallStatic.add(sk);
+        }
+        // Bottom sill apron
+        if (op.y0 > minBaseY + 0.01) {
+          const ap = new THREE.Mesh(new THREE.BoxGeometry(op.w, op.y0 - minBaseY, 0.16), wallMat);
+          ap.position.set(op.tc, minBaseY + (op.y0 - minBaseY) / 2, 0);
+          ap.receiveShadow = true;
+          upperTarget.add(ap);
+
+          const sk = new THREE.Mesh(new THREE.BoxGeometry(op.w, 0.10, 0.02), skirtingMat);
+          sk.position.set(op.tc, 0.05, 0.09);
+          wallStatic.add(sk);
+        }
+        // Lintel above opening
+        if (RH > op.y1 + 0.01) {
+          const lin = new THREE.Mesh(new THREE.BoxGeometry(op.w, RH - op.y1, 0.16), wallMat);
+          lin.position.set(op.tc, op.y1 + (RH - op.y1) / 2, 0);
+          lin.receiveShadow = true;
+          upperTarget.add(lin);
+        }
+
+        // Architectural Sub-Assemblies
+        if (op.type === 'window') {
+          const wg = new THREE.Group();
+          wg.position.set(op.tc, op.y0, 0);
+          const winSill = new THREE.Mesh(new THREE.RoundedBoxGeometry(op.w + 0.08, 0.04, 0.24, 3, 0.01), sillMat);
+          winSill.position.set(0, 0.02, 0.08);
+          winSill.castShadow = true;
+          wg.add(winSill);
+          const wh = op.y1 - op.y0;
+          const frTop = new THREE.Mesh(new THREE.BoxGeometry(op.w, 0.05, 0.08), frameMat);
+          frTop.position.set(0, wh - 0.02, 0); wg.add(frTop);
+          [-op.w / 2 + 0.02, op.w / 2 - 0.02, 0].forEach(fx => {
+            const fm = new THREE.Mesh(new THREE.BoxGeometry(0.045, wh - 0.04, 0.08), frameMat);
+            fm.position.set(fx, wh / 2, 0); wg.add(fm);
+          });
+          const winGlass = new THREE.Mesh(new THREE.PlaneGeometry(op.w - 0.08, wh - 0.08), glassMat);
+          winGlass.position.set(0, wh / 2, 0.01); wg.add(winGlass);
+          // Succulent
+          const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.045, 0.09, 16), new THREE.MeshStandardMaterial({ color: 0xf1f5f9 }));
+          pot.position.set(op.w * 0.35, 0.085, 0.08); pot.castShadow = true; wg.add(pot);
+          const plantMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.6 });
+          for (let p = 0; p < 6; p++) {
+            const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.1, 8), plantMat);
+            leaf.rotation.z = 0.3 * Math.sin(p * 1.05);
+            leaf.rotation.x = 0.3 * Math.cos(p * 1.05);
+            leaf.position.set(op.w * 0.35 + 0.02 * Math.sin(p), 0.14, 0.08 + 0.02 * Math.cos(p));
+            wg.add(leaf);
+          }
+          // Blinds
+          const slats = Math.floor((wh - 0.1) / 0.085);
+          for (let s = 0; s < slats; s++) {
+            const slat = new THREE.Mesh(new THREE.BoxGeometry(op.w - 0.08, 0.003, 0.04), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }));
+            slat.rotation.x = 0.28; slat.position.set(0, 0.1 + s * 0.085, 0.05); slat.castShadow = true; wg.add(slat);
+          }
+          wallStatic.add(wg);
+        }
+
+        if (op.type === 'door') {
+          const dg = new THREE.Group();
+          dg.position.set(op.tc, 0, 0);
+          const dw = op.w;
+          const dh = op.y1;
+
+          jambRear = new THREE.Mesh(new THREE.BoxGeometry(0.04, dh + 0.02, 0.08), doorFrameMat);
+          jambRear.position.set(dw / 2, (dh + 0.02) / 2, 0.04); dg.add(jambRear);
+          jambFront = new THREE.Mesh(new THREE.BoxGeometry(0.04, dh + 0.02, 0.08), doorFrameMat);
+          jambFront.position.set(-dw / 2, (dh + 0.02) / 2, 0.04); dg.add(jambFront);
+          jambTop = new THREE.Mesh(new THREE.BoxGeometry(dw + 0.04, 0.04, 0.08), doorFrameMat);
+          jambTop.position.set(0, dh, 0.04); dg.add(jambTop);
+          const thresh = new THREE.Mesh(new THREE.BoxGeometry(dw + 0.04, 0.012, 0.08), metalMat);
+          thresh.position.set(0, 0.006, 0.04); dg.add(thresh);
+
+          // Corridor exterior chamber (-Z in wall-local frame)
+          const corFloor = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.12, 1.2), new THREE.MeshStandardMaterial({ color: 0xded7cc, roughness: 0.4 }));
+          corFloor.position.set(0.35, -0.06, -0.60); corFloor.receiveShadow = true; dg.add(corFloor);
+          const corWallMat = new THREE.MeshStandardMaterial({ color: 0xf1ece4, roughness: 0.6 });
+          const corBack = new THREE.Mesh(new THREE.BoxGeometry(2.6, RH, 0.1), corWallMat);
+          corBack.position.set(0.35, RH / 2, -1.15); dg.add(corBack);
+          const corEnd = new THREE.Mesh(new THREE.BoxGeometry(0.1, RH, 1.2), corWallMat);
+          corEnd.position.set(1.60, RH / 2, -0.60); dg.add(corEnd);
+          const hallLight = new THREE.PointLight(0xffedd5, 1.5, 6.0);
+          hallLight.position.set(0.35, 2.3, -0.60); dg.add(hallLight);
+          const sconceBase = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.16, 0.04), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 }));
+          sconceBase.position.set(0.35, 1.8, -1.08); dg.add(sconceBase);
+          const sconceGlow = new THREE.Mesh(new THREE.SphereGeometry(0.05, 14, 14), new THREE.MeshBasicMaterial({ color: 0xffedd5 }));
+          sconceGlow.position.set(0.35, 1.8, -1.04); dg.add(sconceGlow);
+          const plateMesh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.02), brassMat);
+          plateMesh.position.set(0, 1.5, -1.08); dg.add(plateMesh);
+
+          // Welcome mat inside room (+Z)
+          const welcomeMat = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.76, 0.008, 0.48, 3, 0.004), new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.9 }));
+          welcomeMat.position.set(0, 0.004, 0.40); welcomeMat.receiveShadow = true; dg.add(welcomeMat);
+
+          // Wall Light Switch beside door
+          const wSw = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.086, 0.086, 0.015, 2, 0.004), socketFaceMat);
+          wSw.position.set(-dw / 2 - 0.12, 1.28, 0.086); dg.add(wSw);
+
+          // Kinematic Hinged Door Leaf (swings into +Z interior!)
+          const swingDir = (S.door.swing || 'inward-north').includes('south') ? -1 : 1;
+          doorHingeGroup = new THREE.Group();
+          doorHingeGroup.position.set(swingDir * (dw / 2 - 0.02), 0, 0.06);
+          doorHingeGroup.userData.swingSign = swingDir;
+
+          const leafW = dw - 0.04;
+          const leafH = dh - 0.055;
+          doorLeaf = new THREE.Mesh(new THREE.RoundedBoxGeometry(leafW, leafH, 0.045, 4, 0.01), doorLeafMat);
+          doorLeaf.position.set(-swingDir * leafW / 2, 0.0155 + leafH / 2, 0);
+          doorLeaf.castShadow = true; doorHingeGroup.add(doorLeaf);
+          [0.6, 1.45].forEach(py => {
+            const pInset = new THREE.Mesh(new THREE.BoxGeometry(leafW * 0.77, 0.62, 0.048), panelMat);
+            pInset.position.set(-swingDir * leafW / 2, py, 0); doorHingeGroup.add(pInset);
+          });
+          const handleX = -swingDir * (leafW - 0.10);
+          const hPlateIn = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.22, 0.01), brassMat);
+          hPlateIn.position.set(handleX, 1.0, 0.026); doorHingeGroup.add(hPlateIn);
+          const hLeverIn = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.11), brassMat);
+          hLeverIn.rotation.x = Math.PI / 2; hLeverIn.position.set(handleX, 1.02, 0.06); doorHingeGroup.add(hLeverIn);
+          const lockPlateOut = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.28, 0.01), lockMat);
+          lockPlateOut.position.set(handleX, 1.0, -0.026); doorHingeGroup.add(lockPlateOut);
+          const hLeverOut = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.11), lockMat);
+          hLeverOut.rotation.x = -Math.PI / 2; hLeverOut.position.set(handleX, 1.02, -0.06); doorHingeGroup.add(hLeverOut);
+
+          dg.add(doorHingeGroup);
+          wallStatic.add(dg);
+        }
+
+        cursor = op.t1;
+      });
+
+      if (cursor < endLimit - 0.01) {
+        const pw = endLimit - cursor;
+        const pier = new THREE.Mesh(new THREE.BoxGeometry(pw, RH - minBaseY, 0.16), wallMat);
+        pier.position.set((cursor + endLimit) / 2, minBaseY + (RH - minBaseY) / 2, 0);
+        pier.receiveShadow = true;
+        upperTarget.add(pier);
+
+        const sk = new THREE.Mesh(new THREE.BoxGeometry(pw, 0.10, 0.02), skirtingMat);
+        sk.position.set((cursor + endLimit) / 2, 0.05, 0.09);
+        wallStatic.add(sk);
+      }
+
+      roomGroup.add(wallStatic);
+    });
+
+    scene.add(roomGroup);
+
+    // --- 6. Furniture ---
+    const furnitureGroup = new THREE.Group();
+    const woodTex = createWoodTexture();
+    const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.52 });
+    const steelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.25 });
+    const linenTex = createLinenTexture('#e5dfd5', 'rgba(110,100,85,0.08)');
+    const duvetLinenTex = createLinenTexture('#3b4a5e', 'rgba(20,30,45,0.14)');
+
+    // --- BED (1.5m x 2.0m, exact 22cm under-bed clearance, headboard below 0.85m window sill) ---
+    const bedGroup = new THREE.Group();
+    const headboard = new THREE.Mesh(new THREE.RoundedBoxGeometry(1.58, 0.84, 0.08, 4, 0.02), woodMat);
+    headboard.scale.set(S.bed.width / 1.52, 1, 1); headboard.position.set(0, 0.42, -S.bed.length / 2 + 0.03);
+    headboard.castShadow = true;
+    bedGroup.add(headboard);
+
+    const headCushion = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(1.44, 0.48, 0.04, 4, 0.02),
+      new THREE.MeshStandardMaterial({ map: linenTex, roughness: 0.92 })
+    );
+    headCushion.position.set(0, 0.56, -0.92);
+    bedGroup.add(headCushion);
+
+    const bedBase = new THREE.Mesh(new THREE.RoundedBoxGeometry(1.52, 0.14, 2.02, 4, 0.02), woodMat);
+    bedBase.scale.set(S.bed.width / 1.52, 1, S.bed.length / 2.02); bedBase.position.set(0, (S.bed.clearance || 0.22) + 0.07, 0); // Bottom cleanly at Y = 0.22m (22cm)
+    bedBase.castShadow = true;
+    bedGroup.add(bedBase);
+
+    [[-0.7, -0.95], [0.7, -0.95], [-0.7, 0.95], [0.7, 0.95]].forEach(([lx, lz]) => {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.032, 0.22, 16), woodMat);
+      leg.position.set(lx, 0.11, lz);
+      leg.castShadow = true;
+      bedGroup.add(leg);
+    });
+
+    const mattress = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(1.48, 0.20, 1.96, 5, 0.03),
+      new THREE.MeshStandardMaterial({ color: 0xfcfcfc, roughness: 0.95 })
+    );
+    mattress.scale.set(S.bed.width / 1.52, 1, S.bed.length / 2.02); mattress.position.set(0, (S.bed.clearance || 0.22) + 0.24, 0);
+    mattress.castShadow = true;
+    bedGroup.add(mattress);
+
+    const duvet = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(1.51, 0.13, 1.38, 5, 0.035),
+      new THREE.MeshStandardMaterial({ map: duvetLinenTex, roughness: 0.88 })
+    );
+    duvet.scale.set(S.bed.width / 1.52, 1, S.bed.length / 2.02); duvet.position.set(0, (S.bed.clearance || 0.22) + 0.345, S.bed.length * 0.14);
+    duvet.castShadow = true;
+    bedGroup.add(duvet);
+
+    // Duvet top fold trim
+    const duvetFold = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(1.50, 0.04, 0.22, 4, 0.018),
+      new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.9 })
+    );
+    duvetFold.position.set(0, 0.625, -0.30);
+    bedGroup.add(duvetFold);
+
+    [-0.36, 0.36].forEach((px, i) => {
+      const pillow = new THREE.Mesh(
+        new THREE.RoundedBoxGeometry(0.54, 0.11, 0.38, 5, 0.04),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 })
+      );
+      pillow.rotation.y = (i === 0 ? -0.05 : 0.05);
+      pillow.position.set(px, 0.61, -0.66);
+      pillow.castShadow = true;
+      bedGroup.add(pillow);
+    });
+
+    addContactShadow(bedGroup, 1.65, 2.15, 0, 0, 0.65);
+    bedGroup.position.set(S.bed.x, 0, S.bed.z); bedGroup.rotation.y = S.bed.rotY || 0;
+    furnitureGroup.add(bedGroup);
+
+    // --- STUDY DESK (1.2m x 0.6m) ---
+    const deskGroup = new THREE.Group();
+    const deskTop = new THREE.Mesh(new THREE.RoundedBoxGeometry(1.2, 0.04, 0.6, 4, 0.012), woodMat);
+    deskTop.position.set(0, 0.75, 0);
+    deskTop.castShadow = true;
+    deskTop.receiveShadow = true;
+    deskGroup.add(deskTop);
+
+    [[-0.55, -0.25], [0.55, -0.25], [-0.55, 0.25], [0.55, 0.25]].forEach(([dx, dz]) => {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.73, 0.038), steelMat);
+      leg.position.set(dx, 0.365, dz);
+      leg.castShadow = true;
+      deskGroup.add(leg);
+    });
+
+    // Dark Felt Desk Pad
+    const deskMat = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(0.66, 0.004, 0.30, 2, 0.002),
+      new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.95 })
+    );
+    deskMat.position.set(-0.04, 0.772, 0.06);
+    deskGroup.add(deskMat);
+
+    // Monitor with Detailed UI Screen Texture & VESA Base Plate
+    const monBase = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.18, 0.01, 0.14, 2, 0.004), steelMat);
+    monBase.position.set(-0.04, 0.775, -0.17);
+    deskGroup.add(monBase);
+
+    const monStand = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.20), steelMat);
+    monStand.position.set(-0.04, 0.88, -0.19);
+    deskGroup.add(monStand);
+
+    const monScreen = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(0.62, 0.36, 0.02, 3, 0.005),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.15 })
+    );
+    monScreen.position.set(-0.04, 1.06, -0.16);
+    monScreen.castShadow = true;
+    deskGroup.add(monScreen);
+
+    const screenTex = createMonitorScreenTexture();
+    const monDisplay = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.58, 0.32),
+      new THREE.MeshBasicMaterial({ map: screenTex })
+    );
+    monDisplay.position.set(-0.04, 1.06, -0.149);
+    deskGroup.add(monDisplay);
+
+    // Mechanical Keyboard + Ergonomic Mouse
+    const kb = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.34, 0.014, 0.11, 2, 0.003), new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.4 }));
+    kb.position.set(-0.08, 0.781, 0.06);
+    deskGroup.add(kb);
+    const keyBed = new THREE.Mesh(new THREE.BoxGeometry(0.31, 0.006, 0.085), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 }));
+    keyBed.position.set(-0.08, 0.788, 0.06);
+    deskGroup.add(keyBed);
+
+    const mouse = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.058, 0.022, 0.092, 3, 0.01), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+    mouse.position.set(0.18, 0.783, 0.06);
+    deskGroup.add(mouse);
+
+    // Coffee Mug on Cork Coaster
+    const coaster = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.005, 16), woodMat);
+    coaster.position.set(-0.42, 0.773, 0.13);
+    deskGroup.add(coaster);
+    const mug = new THREE.Mesh(new THREE.CylinderGeometry(0.034, 0.03, 0.082, 20), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 }));
+    mug.position.set(-0.42, 0.816, 0.13);
+    mug.castShadow = true;
+    deskGroup.add(mug);
+
+    // Articulated Warm Task Desk Lamp
+    const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.068, 0.014, 24), steelMat);
+    lampBase.position.set(-0.47, 0.777, -0.19);
+    deskGroup.add(lampBase);
+    const lampArmLower = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 0.24), steelMat);
+    lampArmLower.rotation.z = -0.25;
+    lampArmLower.position.set(-0.49, 0.89, -0.19);
+    deskGroup.add(lampArmLower);
+    const lampArmUpper = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.22), steelMat);
+    lampArmUpper.rotation.z = 0.55;
+    lampArmUpper.rotation.x = 0.35;
+    lampArmUpper.position.set(-0.46, 1.07, -0.15);
+    deskGroup.add(lampArmUpper);
+    const lampShade = new THREE.Mesh(new THREE.ConeGeometry(0.068, 0.095, 24), new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.35, metalness: 0.2 }));
+    lampShade.rotation.x = 0.55;
+    lampShade.position.set(-0.42, 1.13, -0.10);
+    lampShade.castShadow = true;
+    deskGroup.add(lampShade);
+    const bulbGlow = new THREE.Mesh(new THREE.SphereGeometry(0.022, 12, 12), new THREE.MeshBasicMaterial({ color: 0xfff3c4 }));
+    bulbGlow.position.set(-0.42, 1.10, -0.08);
+    deskGroup.add(bulbGlow);
+
+    // Open-Top Acrylic Book Organizer + Divider + Grounded Hardcover Books (Zero Clipping!)
+    const acrylicMat = new THREE.MeshPhysicalMaterial({
+      color: 0xf8fafc,
+      transmission: 0.88,
+      opacity: 0.65,
+      transparent: true,
+      roughness: 0.08
+    });
+    // Base Plate
+    const orgBase = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.006, 0.22), acrylicMat);
+    orgBase.position.set(0.42, 0.773, -0.09);
+    deskGroup.add(orgBase);
+    // Left, Mid-Divider, Right & Back Acrylic Panels (Books sit strictly inside open bays!)
+    [0.313, 0.42, 0.527].forEach(px => {
+      const panel = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.006, 0.14, 0.21, 2, 0.002), acrylicMat);
+      panel.position.set(px, 0.843, -0.09);
+      deskGroup.add(panel);
+    });
+    const orgBack = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.006), acrylicMat);
+    orgBack.position.set(0.42, 0.833, -0.197);
+    deskGroup.add(orgBack);
+
+    const deskBookMats = [
+      new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.6 }), // Navy
+      new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6 }), // Emerald
+      new THREE.MeshStandardMaterial({ color: 0xc2410c, roughness: 0.6 }), // Terracotta
+      new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.6 })  // Ochre
+    ];
+    const pageMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.9 });
+    [
+      { w: 0.036, h: 0.165, d: 0.185, x: 0.345, mat: deskBookMats[0] },
+      { w: 0.032, h: 0.155, d: 0.175, x: 0.388, mat: deskBookMats[1] },
+      { w: 0.038, h: 0.175, d: 0.190, x: 0.452, mat: deskBookMats[2] },
+      { w: 0.032, h: 0.150, d: 0.175, x: 0.494, mat: deskBookMats[3] }
+    ].forEach(b => {
+      // Crisp Hardcover Spine + Left/Right Cover Boards
+      const coverT = 0.004;
+      [-b.w / 2 + coverT / 2, b.w / 2 - coverT / 2].forEach(ox => {
+        const board = new THREE.Mesh(new THREE.BoxGeometry(coverT, b.h, b.d), b.mat);
+        board.position.set(b.x + ox, 0.776 + b.h / 2, -0.09);
+        board.castShadow = true;
+        deskGroup.add(board);
+      });
+      const spine = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, coverT), b.mat);
+      spine.position.set(b.x, 0.776 + b.h / 2, -0.09 - b.d / 2 + coverT / 2);
+      deskGroup.add(spine);
+      // Clean White Page Block nested cleanly inside covers (Zero Z-fighting!)
+      const pages = new THREE.Mesh(new THREE.BoxGeometry(b.w - coverT * 2.1, b.h - 0.006, b.d - 0.008), pageMat);
+      pages.position.set(b.x, 0.776 + (b.h - 0.006) / 2, -0.09 + 0.001);
+      deskGroup.add(pages);
+    });
+
+    // Compact Front-Right Snack & Small-Items Caddy (Y = 0.77 grounded)
+    const snackTrayGroup = new THREE.Group();
+    const sTrayBase = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.006, 0.14), acrylicMat);
+    sTrayBase.position.set(0.42, 0.773, 0.15);
+    snackTrayGroup.add(sTrayBase);
+    const sTrayRim = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.04, 0.006), acrylicMat);
+    sTrayRim.position.set(0.42, 0.793, 0.217);
+    snackTrayGroup.add(sTrayRim);
+    // Upright Sealed Snack Pouches & Beverage Can
+    const snackPouch1 = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.08, 0.11, 0.035, 3, 0.01), new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4 }));
+    snackPouch1.position.set(0.38, 0.83, 0.14);
+    snackPouch1.castShadow = true;
+    snackTrayGroup.add(snackPouch1);
+    const snackCan = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.09, 16), new THREE.MeshStandardMaterial({ color: 0x0ea5e9, metalness: 0.7, roughness: 0.2 }));
+    snackCan.position.set(0.47, 0.82, 0.16);
+    snackCan.castShadow = true;
+    snackTrayGroup.add(snackCan);
+    deskGroup.add(snackTrayGroup);
+
+    addContactShadow(deskGroup, 1.3, 0.7, 0, 0, 0.65);
+    deskGroup.position.set(S.furniture.desk.x, 0, S.furniture.desk.z); deskGroup.rotation.y = S.furniture.desk.rotY || 0;
+    furnitureGroup.add(deskGroup);
+
+    // --- ERGONOMIC CHAIR (with grounded 5-wheel castors + armrests) ---
+    const chairGroup = new THREE.Group();
+    const seatCushion = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(0.46, 0.06, 0.46, 4, 0.02),
+      new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 })
+    );
+    seatCushion.position.set(0, 0.45, 0);
+    seatCushion.castShadow = true;
+    chairGroup.add(seatCushion);
+
+    const backrest = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(0.42, 0.46, 0.035, 4, 0.02),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 })
+    );
+    backrest.position.set(0, 0.72, 0.22);
+    backrest.castShadow = true;
+    chairGroup.add(backrest);
+
+    [-0.24, 0.24].forEach(ax => {
+      const armPost = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.18, 0.03), steelMat);
+      armPost.position.set(ax, 0.54, 0.02);
+      chairGroup.add(armPost);
+      const armPad = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.045, 0.022, 0.22, 2, 0.008), steelMat);
+      armPad.position.set(ax, 0.635, 0.0);
+      chairGroup.add(armPad);
+    });
+
+    const chairPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.028, 0.36), steelMat);
+    chairPillar.position.set(0, 0.25, 0);
+    chairGroup.add(chairPillar);
+
+    for (let c = 0; c < 5; c++) {
+      const ang = c * (Math.PI * 2 / 5);
+      const starLeg = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.026, 0.26), steelMat);
+      starLeg.rotation.y = ang;
+      starLeg.position.set(0.13 * Math.sin(ang), 0.06, 0.13 * Math.cos(ang));
+      chairGroup.add(starLeg);
+
+      // Grounded Dual Castor Wheel at Tip
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.032, 16), steelMat);
+      wheel.rotation.z = Math.PI / 2;
+      wheel.rotation.y = ang;
+      wheel.position.set(0.24 * Math.sin(ang), 0.024, 0.24 * Math.cos(ang));
+      chairGroup.add(wheel);
+    }
+
+    addContactShadow(chairGroup, 0.58, 0.58, 0, 0, 0.55);
+    chairGroup.position.set(S.furniture.chair.x, 0, S.furniture.chair.z); chairGroup.rotation.y = S.furniture.chair.rotY || 0;
+    furnitureGroup.add(chairGroup);
+
+    // --- NATURAL SISAL RUNNER RUG (Cat Scratch Proof, Z in [-0.30, 1.65] avoiding drawer tracks) ---
+    const rugCanvas = document.createElement('canvas');
+    rugCanvas.width = 256; rugCanvas.height = 256;
+    const rctx = rugCanvas.getContext('2d');
+    rctx.fillStyle = '#d7c4a7';
+    rctx.fillRect(0, 0, 256, 256);
+    rctx.strokeStyle = '#bda582';
+    rctx.lineWidth = 3;
+    for (let i = 0; i <= 256; i += 16) {
+      rctx.beginPath(); rctx.moveTo(i, 0); rctx.lineTo(i, 256); rctx.stroke();
+    }
+    const sisalTex = new THREE.CanvasTexture(rugCanvas);
+    sisalTex.wrapS = THREE.RepeatWrapping; sisalTex.wrapT = THREE.RepeatWrapping;
+    sisalTex.repeat.set(4, 8);
+    const sisalMat = new THREE.MeshStandardMaterial({ map: sisalTex, roughness: 0.9 });
+    const sisalRug = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.95), sisalMat);
+    sisalRug.rotation.x = -Math.PI / 2;
+    sisalRug.position.set(S.furniture.rug.x, 0.002, S.furniture.rug.z); sisalRug.rotation.z = S.furniture.rug.rotY || 0;
+    sisalRug.receiveShadow = true;
+    furnitureGroup.add(sisalRug);
+
+    scene.add(furnitureGroup);
+
+    // --- 7. Kinematic Interactive Storage Objects ---
+    const storageGroup = new THREE.Group();
+
+    // A. Wall-Mounted Badminton Equipment (High Position > 1.7m, clear of door swing)
+    const racketGroup = new THREE.Group();
+    const rackPlate = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.025, 0.36, 0.12, 3, 0.01), woodMat);
+    rackPlate.position.set(-1.7, 1.8, -0.6);
+    racketGroup.add(rackPlate);
+
+    [-0.03, 0.03].forEach((offsetZ, rIdx) => {
+      const rHead = new THREE.Mesh(
+        new THREE.TorusGeometry(0.11, 0.008, 16, 32),
+        new THREE.MeshStandardMaterial({ color: (rIdx === 0 ? 0x2563eb : 0xef4444), metalness: 0.8, roughness: 0.2 })
+      );
+      rHead.scale.set(1.0, 1.25, 1.0);
+      rHead.position.set(-1.62, 1.7, -0.6 + offsetZ);
+      racketGroup.add(rHead);
+
+      const rStrings = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.18, 0.24, 8, 10),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, wireframe: true })
+      );
+      rStrings.position.set(-1.62, 1.7, -0.6 + offsetZ);
+      racketGroup.add(rStrings);
+
+      const rShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.28), steelMat);
+      rShaft.position.set(-1.62, 1.45, -0.6 + offsetZ);
+      racketGroup.add(rShaft);
+
+      const rGrip = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.011, 0.013, 0.16, 16),
+        new THREE.MeshStandardMaterial({ color: (rIdx === 0 ? 0xfacc15 : 0x1e293b), roughness: 0.9 })
+      );
+      rGrip.position.set(-1.62, 1.25, -0.6 + offsetZ);
+      racketGroup.add(rGrip);
+    });
+
+    // Wall-mounted Acrylic/Steel Ring Bracket holding Shuttlecock Tube
+    const tubeClipMount = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.05, 0.09), woodMat);
+    tubeClipMount.position.set(-1.71, 1.45, -0.40);
+    racketGroup.add(tubeClipMount);
+    const tubeClipRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.042, 0.006, 10, 24),
+      steelMat
+    );
+    tubeClipRing.rotation.x = Math.PI / 2;
+    tubeClipRing.position.set(-1.66, 1.45, -0.40);
+    racketGroup.add(tubeClipRing);
+    const shuttleTube = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.038, 0.038, 0.38, 24),
+      new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.3 })
+    );
+    shuttleTube.position.set(-1.66, 1.45, -0.40);
+    shuttleTube.castShadow = true;
+    racketGroup.add(shuttleTube);
+    const tubeCap = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.040, 0.040, 0.025, 24),
+      new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 })
+    );
+    tubeCap.position.set(-1.66, 1.645, -0.40);
+    racketGroup.add(tubeCap);
+
+    // Steel Wall Hook holding Racket Bag cleanly at Z = -0.82 (clear of racket grips)
+    const bagHookPlate = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.06, 0.05), steelMat);
+    bagHookPlate.position.set(-1.712, 1.18, -0.82);
+    racketGroup.add(bagHookPlate);
+    const bagHookPeg = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.06), steelMat);
+    bagHookPeg.rotation.z = Math.PI / 2;
+    bagHookPeg.position.set(-1.68, 1.18, -0.82);
+    racketGroup.add(bagHookPeg);
+    const gearBag = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(0.16, 0.68, 0.24, 4, 0.03),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.7 })
+    );
+    gearBag.position.set(-1.63, 0.84, -0.82);
+    gearBag.castShadow = true;
+    racketGroup.add(gearBag);
+
+    const racketRoot = new THREE.Group();
+    const rkSpec = S.furniture.racketMount || { x: -1.70, z: -0.60, hookY: 1.80, rotY: 0 };
+    racketRoot.position.set(rkSpec.x, (rkSpec.hookY || 1.80) - 1.80, rkSpec.z);
+    racketRoot.rotation.y = rkSpec.rotY || 0;
+    racketGroup.position.set(1.70, 0, 0.60);
+    racketRoot.add(racketGroup);
+    storageGroup.add(racketRoot);
+
+    // B. Kinematic Under-Bed Storage Drawers (Fits cleanly under 22cm bed frame!)
+    const bedDrawersGroup = new THREE.Group();
+    const frostedBedMat = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      transmission: 0.72,
+      opacity: 0.85,
+      transparent: true,
+      roughness: 0.25
+    });
+
+    [ -1.65, -0.75 ].forEach((bz, idx) => {
+      // Tub + Contoured Lid (Y in [0.024, 0.188], crisp 3.2cm gap below 0.22m bed base)
+      const box = new THREE.Mesh(
+        new THREE.RoundedBoxGeometry(0.64, 0.15, 0.80, 4, 0.022),
+        frostedBedMat
+      );
+      box.position.set(0.55, 0.099, bz);
+      box.castShadow = true;
+      bedDrawersGroup.add(box);
+
+      const lid = new THREE.Mesh(
+        new THREE.RoundedBoxGeometry(0.65, 0.015, 0.81, 4, 0.024),
+        new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.32 })
+      );
+      lid.position.set(0.55, 0.180, bz);
+      bedDrawersGroup.add(lid);
+
+      const insideClothes = new THREE.Mesh(
+        new THREE.RoundedBoxGeometry(0.55, 0.11, 0.70, 3, 0.02),
+        new THREE.MeshStandardMaterial({ color: (idx === 0 ? 0x3b82f6 : 0x64748b), roughness: 0.9 })
+      );
+      insideClothes.position.set(0.55, 0.095, bz);
+      bedDrawersGroup.add(insideClothes);
+
+      const handle = new THREE.Mesh(
+        new THREE.RoundedBoxGeometry(0.018, 0.028, 0.16, 2, 0.006),
+        new THREE.MeshStandardMaterial({ color: 0x2563eb })
+      );
+      handle.position.set(0.226, 0.115, bz);
+      bedDrawersGroup.add(handle);
+
+      [[0.31, -0.32], [0.79, -0.32], [0.31, 0.32], [0.79, 0.32]].forEach(([wx, wz]) => {
+        const castor = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.016), steelMat);
+        castor.rotation.z = Math.PI / 2;
+        castor.position.set(wx, 0.012, bz + wz);
+        bedDrawersGroup.add(castor);
+      });
+    });
+
+    const bedDrawersPivot = new THREE.Group();
+    bedDrawersPivot.position.set(S.bed.x, 0, S.bed.z);
+    bedDrawersPivot.rotation.y = S.bed.rotY || 0;
+    bedDrawersGroup.position.set(-0.90, 0, 1.25);
+    bedDrawersPivot.add(bedDrawersGroup);
+    storageGroup.add(bedDrawersPivot);
+
+    // C. Cat Living Sanctuary (Flush against West Wall, Zero Obstacles in Aisle)
+    const catStationGroup = new THREE.Group();
+
+    // 10kg Airtight Cat Food Container with Real Visible Kibble Level
+    const bucketBase = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(0.28, 0.32, 0.38, 4, 0.02),
+      new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 })
+    );
+    bucketBase.position.set(-1.48, 0.16, -0.90);
+    bucketBase.castShadow = true;
+    catStationGroup.add(bucketBase);
+
+    const kibbleTex = createKibbleTexture();
+    const gaugeRim = new THREE.Mesh(
+      new THREE.BoxGeometry(0.006, 0.215, 0.062),
+      new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.4 })
+    );
+    gaugeRim.position.set(-1.34, 0.16, -0.90);
+    catStationGroup.add(gaugeRim);
+    const bucketGauge = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.20, 0.048),
+      new THREE.MeshStandardMaterial({ map: kibbleTex, roughness: 0.4 })
+    );
+    bucketGauge.rotation.y = Math.PI / 2;
+    bucketGauge.rotation.z = Math.PI / 2;
+    bucketGauge.position.set(-1.336, 0.16, -0.90);
+    catStationGroup.add(bucketGauge);
+
+    // Kinematic Bucket Lid with Lock Clasp
+    const bucketLidPivot = new THREE.Group();
+    bucketLidPivot.position.set(-1.48, 0.32, -1.09);
+    const bucketLid = new THREE.Mesh(
+      new THREE.RoundedBoxGeometry(0.29, 0.035, 0.39, 3, 0.01),
+      new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.35 })
+    );
+    bucketLid.position.set(0, 0.018, 0.19);
+    bucketLidPivot.add(bucketLid);
+    const lidClasp = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.045, 0.08), steelMat);
+    lidClasp.position.set(0.145, 0.005, 0.19);
+    bucketLidPivot.add(lidClasp);
+    catStationGroup.add(bucketLidPivot);
+
+    // Tilted Dual Hollow Ceramic Feeding Bowls (LatheGeometry interior!)
+    const bowlStand = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.16, 0.065, 0.34, 3, 0.01), woodMat);
+    bowlStand.position.set(-1.48, 0.032, -0.55);
+    bowlStand.castShadow = true;
+    catStationGroup.add(bowlStand);
+
+    const bowlPts = [
+      new THREE.Vector2(0, 0),
+      new THREE.Vector2(0.042, 0),
+      new THREE.Vector2(0.058, 0.042),
+      new THREE.Vector2(0.052, 0.044),
+      new THREE.Vector2(0.038, 0.010),
+      new THREE.Vector2(0, 0.010)
+    ];
+    const hollowBowlGeom = new THREE.LatheGeometry(bowlPts, 28);
+    const ceramicMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.15 });
+
+    [-0.075, 0.075].forEach((bz, bIdx) => {
+      const bowl = new THREE.Mesh(hollowBowlGeom, ceramicMat);
+      bowl.rotation.z = -0.15;
+      bowl.position.set(-1.48, 0.052, -0.55 + bz);
+      catStationGroup.add(bowl);
+
+      const contentMat = (bIdx === 0)
+        ? new THREE.MeshStandardMaterial({ map: kibbleTex, roughness: 0.8 })
+        : new THREE.MeshPhysicalMaterial({ color: 0x60a5fa, transmission: 0.5, opacity: 0.85, transparent: true, roughness: 0.05 });
+      const contentDisc = new THREE.Mesh(
+        bIdx === 0 ? new THREE.SphereGeometry(0.044, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.4) : new THREE.CylinderGeometry(0.047, 0.045, 0.005, 24),
+        contentMat
+      );
+      if (bIdx === 0) contentDisc.scale.set(1, 0.35, 1);
+      contentDisc.rotation.z = -0.15;
+      contentDisc.position.set(-1.477, bIdx === 0 ? 0.068 : 0.078, -0.55 + bz);
+      catStationGroup.add(contentDisc);
+    });
+
+    // Plush Donut Cat Bed (Against West wall at Z = -0.18)
+    const catBedMat = new THREE.MeshStandardMaterial({ color: 0xd7c4ae, roughness: 0.92 });
+    const catBedBase = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.20, 0.045, 24), catBedMat);
+    catBedBase.position.set(-1.45, 0.022, -0.18);
+    catBedBase.receiveShadow = true;
+    catStationGroup.add(catBedBase);
+
+    const catBedRim = new THREE.Mesh(
+      new THREE.TorusGeometry(0.18, 0.045, 14, 28),
+      new THREE.MeshStandardMaterial({ color: 0xc8b299, roughness: 0.92 })
+    );
+    catBedRim.rotation.x = Math.PI / 2;
+    catBedRim.position.set(-1.45, 0.052, -0.18);
+    catStationGroup.add(catBedRim);
+    addContactShadow(catStationGroup, 0.52, 0.52, -1.45, -0.18, 0.52);
+
+    // Compact Sisal Scratching Post (Safe against West wall Z = +0.15, clear of desk Z = +0.30)
+    const scratchBase = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.10, 0.025, 20), catBedMat);
+    scratchBase.position.set(-1.54, 0.013, 0.15);
+    scratchBase.castShadow = true;
+    catStationGroup.add(scratchBase);
+    const scratchPost = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.038, 0.038, 0.38, 20),
+      new THREE.MeshStandardMaterial({ color: 0xd2b48c, roughness: 0.95 })
+    );
+    scratchPost.position.set(-1.54, 0.21, 0.15);
+    scratchPost.castShadow = true;
+    catStationGroup.add(scratchPost);
+    const scratchCap = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.042, 0.025, 20), woodMat);
+    scratchCap.position.set(-1.54, 0.405, 0.15);
+    catStationGroup.add(scratchCap);
+    const toyCord = new THREE.Mesh(new THREE.CylinderGeometry(0.002, 0.002, 0.075), catBedMat);
+    toyCord.rotation.z = 0.28;
+    toyCord.position.set(-1.505, 0.375, 0.15);
+    catStationGroup.add(toyCord);
+    const catToyBall = new THREE.Mesh(new THREE.SphereGeometry(0.024, 14, 14), new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.85 }));
+    catToyBall.position.set(-1.495, 0.335, 0.15);
+    catStationGroup.add(catToyBall);
+
+    // Adorable Warm Ginger Tabby Cat
+    const catCompanion = new THREE.Group();
+    const tabbyTex = createTabbyFurTexture();
+    const catFurMat = new THREE.MeshStandardMaterial({ map: tabbyTex, roughness: 0.82 });
+    const catOrangeMat = new THREE.MeshStandardMaterial({ color: 0xe07b28, roughness: 0.82 });
+    const catWhiteMat = new THREE.MeshStandardMaterial({ color: 0xfffbf5, roughness: 0.85 });
+    const innerEarMat = new THREE.MeshStandardMaterial({ color: 0xfda4af, roughness: 0.65 });
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.1 });
+
+    const catBody = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.19, 0.11, 0.25, 5, 0.05), catFurMat);
+    catBody.position.set(0, 0.055, 0);
+    catBody.castShadow = true;
+    catCompanion.add(catBody);
+
+    const catHead = new THREE.Mesh(new THREE.SphereGeometry(0.072, 20, 20), catOrangeMat);
+    catHead.position.set(0, 0.115, 0.125);
+    catHead.castShadow = true;
+    catCompanion.add(catHead);
+
+    [-0.036, 0.036].forEach(ex => {
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.045, 4), catOrangeMat);
+      ear.rotation.y = Math.PI / 4;
+      ear.position.set(ex, 0.172, 0.125);
+      catCompanion.add(ear);
+
+      const inEar = new THREE.Mesh(new THREE.ConeGeometry(0.015, 0.028, 4), innerEarMat);
+      inEar.rotation.y = Math.PI / 4;
+      inEar.position.set(ex, 0.168, 0.132);
+      catCompanion.add(inEar);
+
+      // Sleek recessed dark cute eyes + white specular sparkle dot
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.008, 12, 12), eyeMat);
+      eye.position.set(ex * 0.72, 0.123, 0.186);
+      catCompanion.add(eye);
+      const glint = new THREE.Mesh(new THREE.SphereGeometry(0.0025, 8, 8), catWhiteMat);
+      glint.position.set(ex * 0.72 - 0.002, 0.126, 0.193);
+      catCompanion.add(glint);
+    });
+
+    const catSnout = new THREE.Mesh(new THREE.SphereGeometry(0.026, 12, 12), catWhiteMat);
+    catSnout.position.set(0, 0.095, 0.185);
+    catCompanion.add(catSnout);
+    const catNose = new THREE.Mesh(new THREE.SphereGeometry(0.008, 8, 8), innerEarMat);
+    catNose.position.set(0, 0.104, 0.208);
+    catCompanion.add(catNose);
+
+    const catTail = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.018, 10, 20, Math.PI * 1.15), catOrangeMat);
+    catTail.rotation.x = Math.PI / 2;
+    catTail.position.set(0.06, 0.025, -0.09);
+    catCompanion.add(catTail);
+
+    catCompanion.position.set(-1.45, 0.045, -0.18);
+    catCompanion.rotation.y = 0.65;
+    catStationGroup.add(catCompanion);
+
+    const catRoot = new THREE.Group();
+    catRoot.position.set(S.furniture.catStation.x, 0, S.furniture.catStation.z); catRoot.rotation.y = S.furniture.catStation.rotY || 0;
+    catStationGroup.position.set(1.48, 0, 0.45);
+    catRoot.add(catStationGroup);
+    storageGroup.add(catRoot);
+
+    // D. High-Capacity Tailored Wardrobe & Suitcase Storage System (East Wall X: 1.18..1.68, Z: 0.22..1.48)
+    const wardrobeGroup = new THREE.Group();
+    const wFrameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.85, roughness: 0.25 });
+    const wShelfMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.55 });
+    const hangerMat = new THREE.MeshStandardMaterial({ color: 0x8c5b34, roughness: 0.45 });
+    const hookMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.9, roughness: 0.2 });
+
+    // 1. Structural Uprights & Side Crossbars (6 Columns: Left, Mid-Divider Z=0.72, Right)
+    [
+      [1.18, 0.22], [1.68, 0.22],
+      [1.18, 0.72], [1.68, 0.72],
+      [1.18, 1.48], [1.68, 1.48]
+    ].forEach(([px, pz]) => {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.028, 2.15, 0.028), wFrameMat);
+      post.position.set(px, 1.075, pz);
+      post.castShadow = true;
+      wardrobeGroup.add(post);
+
+      // Adjustable brass foot pad
+      const pad = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.012, 12), brassMat);
+      pad.position.set(px, 0.006, pz);
+      wardrobeGroup.add(pad);
+    });
+
+    // Side structural bars in X across Z = 0.22, 0.72, 1.48
+    [0.22, 0.72, 1.48].forEach(pz => {
+      [0.08, 1.95, 2.14].forEach(py => {
+        const sbar = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.02, 0.02), wFrameMat);
+        sbar.position.set(1.43, py, pz);
+        wardrobeGroup.add(sbar);
+      });
+    });
+
+    // FIXED Rear Anti-Sway X-Braces strictly inside YZ plane at X = 1.685!
+    const braceMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.82, roughness: 0.3 });
+    const braceLen = Math.hypot(1.75, 1.24); // spans Y in [0.15..1.90], Z in [0.23..1.47]
+    const braceTilt = Math.atan2(1.24, 1.75);
+    const brace1 = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, braceLen), braceMat);
+    brace1.rotation.x = braceTilt;
+    brace1.position.set(1.685, 1.025, 0.85);
+    wardrobeGroup.add(brace1);
+
+    const brace2 = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, braceLen), braceMat);
+    brace2.rotation.x = -braceTilt;
+    brace2.position.set(1.685, 1.025, 0.85);
+    wardrobeGroup.add(brace2);
+
+    // 2. Heavy-Duty Bottom & Top Luggage Deck Shelves + Top Safety Rail
+    const shelfBottom = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.024, 1.28), wShelfMat);
+    shelfBottom.position.set(1.43, 0.08, 0.85);
+    shelfBottom.receiveShadow = true;
+    wardrobeGroup.add(shelfBottom);
+
+    const shelfTop = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.026, 1.28), wShelfMat);
+    shelfTop.position.set(1.43, 1.95, 0.85);
+    shelfTop.receiveShadow = true;
+    wardrobeGroup.add(shelfTop);
+
+    // Safety perimeter bar around top luggage deck rear & ends (Y = 2.13m)
+    const rearRailTop = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.018, 1.28), wFrameMat);
+    rearRailTop.position.set(1.68, 2.13, 0.85);
+    wardrobeGroup.add(rearRailTop);
+
+    // 3. Stainless Steel Hanging Rail (Y = 1.88m)
+    const hangRail = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 1.26, 16), hookMat);
+    hangRail.rotation.x = Math.PI / 2;
+    hangRail.position.set(1.43, 1.88, 0.85);
+    wardrobeGroup.add(hangRail);
+
+    // 4. Tailored Sloped-Shoulder Extruded Garment Generator (38 Detailed Pieces!)
+    const garmentGeomCache = {};
+    function getGarmentGeom(w, len, th) {
+      const key = w.toFixed(2) + '_' + len.toFixed(2) + '_' + th.toFixed(2);
+      if (garmentGeomCache[key]) return garmentGeomCache[key];
+      const hw = w * 0.5;
+      const shW = hw;
+      const neckW = 0.048;
+      const shDrop = 0.075;
+      const hemHw = hw * 0.96;
+      const shape = new THREE.Shape();
+      // Tailored coat/shirt profile facing in X-Y plane, extruded in Z with thickness
+      shape.moveTo(-neckW, 0);
+      shape.lineTo(neckW, 0);
+      shape.lineTo(shW, -shDrop);
+      shape.lineTo(hemHw, -len);
+      shape.lineTo(-hemHw, -len);
+      shape.lineTo(-shW, -shDrop);
+      shape.closePath();
+
+      const depthCore = Math.max(0.008, th - 0.008);
+      const geom = new THREE.ExtrudeGeometry(shape, {
+        depth: depthCore,
+        bevelEnabled: true,
+        bevelSegments: 2,
+        steps: 1,
+        bevelSize: 0.004,
+        bevelThickness: 0.004
+      });
+      geom.translate(0, 0, -depthCore / 2);
+      garmentGeomCache[key] = geom;
+      return geom;
+    }
+
+    function createGarment(col, len, w, th, pz, hasPlacket = false, tiltZ = 0) {
+      const gGroup = new THREE.Group();
+
+      // Steel Wire Hook curving over hangRail (Y = 0 corresponds to hangRail Y = 1.88)
+      const hook = new THREE.Mesh(new THREE.TorusGeometry(0.017, 0.0028, 8, 16, Math.PI * 1.45), hookMat);
+      hook.rotation.y = Math.PI / 2;
+      hook.rotation.z = -0.35;
+      hook.position.set(0, 0.002, 0);
+      gGroup.add(hook);
+
+      // Pitched Wooden Shoulder Hanger Bars (left & right sloping bars)
+      const armLen = w * 0.48;
+      [-1, 1].forEach(side => {
+        const arm = new THREE.Mesh(new THREE.BoxGeometry(armLen, 0.013, 0.015), hangerMat);
+        arm.rotation.z = -side * 0.24;
+        arm.position.set(side * (armLen * 0.45), -0.042, 0);
+        gGroup.add(arm);
+      });
+
+      // Tailored Garment Body
+      const mat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.86 });
+      const cloth = new THREE.Mesh(getGarmentGeom(w, len, th), mat);
+      cloth.position.set(0, -0.018, 0);
+      cloth.castShadow = true;
+      gGroup.add(cloth);
+
+
+
+      gGroup.rotation.x = tiltZ;
+      gGroup.position.set(1.43, 1.88, pz);
+      return gGroup;
+    }
+
+    // Left Zone: 13 Long Coats, Trenches, Puffer Parkas & Wool Slacks (Z in 0.29 to 0.69)
+    const longCoats = [
+      { col: 0x1e2229, len: 1.12, w: 0.42, th: 0.036, pk: false },
+      { col: 0xbfa07a, len: 1.08, w: 0.42, th: 0.034, pk: true  },
+      { col: 0x2a2d34, len: 1.06, w: 0.40, th: 0.032, pk: false },
+      { col: 0x1c2833, len: 1.13, w: 0.43, th: 0.042, pk: true  },
+      { col: 0xd5cbb2, len: 1.02, w: 0.40, th: 0.030, pk: false },
+      { col: 0x36454f, len: 1.04, w: 0.40, th: 0.032, pk: false },
+      { col: 0x2e4053, len: 1.06, w: 0.41, th: 0.034, pk: true  },
+      { col: 0x4a235a, len: 0.98, w: 0.39, th: 0.030, pk: false },
+      { col: 0x17202a, len: 1.10, w: 0.42, th: 0.038, pk: false },
+      { col: 0x784212, len: 0.96, w: 0.38, th: 0.028, pk: true  },
+      { col: 0x1b4f72, len: 1.00, w: 0.38, th: 0.028, pk: false },
+      { col: 0x1f2937, len: 0.98, w: 0.38, th: 0.028, pk: false },
+      { col: 0x374151, len: 0.94, w: 0.38, th: 0.026, pk: false }
+    ];
+    longCoats.forEach((c, idx) => {
+      const pz = 0.29 + idx * 0.033;
+      const jitter = ((idx % 3) - 1) * 0.008;
+      wardrobeGroup.add(createGarment(c.col, c.len, c.w, c.th, pz, c.pk, jitter));
+    });
+
+    // Right Zone: 25 Dense Daily Tops, Hoodies, Blazers, Oxford Shirts & Knitwear (Z in 0.75 to 1.44)
+    const shortTops = [
+      { col: 0x0f172a, len: 0.70, w: 0.40, th: 0.038, pk: true  },
+      { col: 0x334155, len: 0.68, w: 0.39, th: 0.036, pk: false },
+      { col: 0x475569, len: 0.66, w: 0.38, th: 0.032, pk: false },
+      { col: 0x1e3a8a, len: 0.72, w: 0.40, th: 0.034, pk: true  },
+      { col: 0x2563eb, len: 0.65, w: 0.38, th: 0.028, pk: false },
+      { col: 0x1e293b, len: 0.67, w: 0.39, th: 0.032, pk: true  },
+      { col: 0x3f3f46, len: 0.64, w: 0.38, th: 0.030, pk: false },
+      { col: 0x52525b, len: 0.63, w: 0.38, th: 0.028, pk: false },
+      { col: 0xf8fafc, len: 0.64, w: 0.36, th: 0.022, pk: false },
+      { col: 0xf1f5f9, len: 0.64, w: 0.36, th: 0.022, pk: false },
+      { col: 0x93c5fd, len: 0.62, w: 0.36, th: 0.022, pk: false },
+      { col: 0xbfdbfe, len: 0.63, w: 0.36, th: 0.022, pk: false },
+      { col: 0xdbeafe, len: 0.62, w: 0.36, th: 0.022, pk: false },
+      { col: 0x164e63, len: 0.65, w: 0.37, th: 0.026, pk: true  },
+      { col: 0x155e75, len: 0.65, w: 0.38, th: 0.028, pk: false },
+      { col: 0x065f46, len: 0.67, w: 0.38, th: 0.030, pk: true  },
+      { col: 0x047857, len: 0.64, w: 0.37, th: 0.028, pk: false },
+      { col: 0x854d0e, len: 0.62, w: 0.36, th: 0.028, pk: false },
+      { col: 0xb45309, len: 0.63, w: 0.37, th: 0.028, pk: false },
+      { col: 0x7c2d12, len: 0.65, w: 0.38, th: 0.030, pk: false },
+      { col: 0x881337, len: 0.64, w: 0.37, th: 0.028, pk: false },
+      { col: 0xe2e8f0, len: 0.59, w: 0.36, th: 0.020, pk: false },
+      { col: 0xcbd5e1, len: 0.59, w: 0.36, th: 0.020, pk: false },
+      { col: 0x334155, len: 0.59, w: 0.36, th: 0.020, pk: false },
+      { col: 0x0f172a, len: 0.59, w: 0.36, th: 0.020, pk: false }
+    ];
+    shortTops.forEach((t, idx) => {
+      const pz = 0.755 + idx * 0.0285;
+      const jitter = ((idx % 3) - 1) * 0.008;
+      wardrobeGroup.add(createGarment(t.col, t.len, t.w, t.th, pz, t.pk, jitter));
+    });
+
+    // 5. Realistic Bottom Storage Solutions
+    // A. Left Floor Zone: Open-Top Cotton Linen Laundry Basket + 2 Clear Sneaker Boxes
+    const hamperGroup = new THREE.Group();
+    const hamperMat = new THREE.MeshStandardMaterial({ map: createLinenTexture('#d8cab3', 'rgba(130,115,90,0.16)'), roughness: 0.94 });
+    // Hollow Hamper Wall Panels (bottom + 4 sides, leaving genuine top cavity!)
+    const hBottom = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.018, 0.28), hamperMat);
+    hBottom.position.set(1.43, 0.10, 0.42);
+    hamperGroup.add(hBottom);
+    const hFront = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.38, 0.28), hamperMat);
+    hFront.position.set(1.25, 0.29, 0.42);
+    hamperGroup.add(hFront);
+    const hBack = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.38, 0.28), hamperMat);
+    hBack.position.set(1.61, 0.29, 0.42);
+    hamperGroup.add(hBack);
+    [-0.13, 0.13].forEach(sz => {
+      const hSide = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.02), hamperMat);
+      hSide.position.set(1.43, 0.29, 0.42 + sz);
+      hamperGroup.add(hSide);
+    });
+    // Folded soft clothes resting inside hamper
+    const hLaundry1 = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.28, 0.14, 0.20, 3, 0.04), new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.9 }));
+    hLaundry1.position.set(1.43, 0.25, 0.41);
+    hamperGroup.add(hLaundry1);
+    const hLaundry2 = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.24, 0.10, 0.16, 3, 0.03), new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.9 }));
+    hLaundry2.position.set(1.41, 0.34, 0.43);
+    hLaundry2.rotation.y = 0.2;
+    hamperGroup.add(hLaundry2);
+    // Leather Side Handles
+    const leatherMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.55 });
+    [-0.19, 0.19].forEach(hx => {
+      const hStrap = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.07, 0.045), leatherMat);
+      hStrap.position.set(1.43 + hx, 0.45, 0.42);
+      hamperGroup.add(hStrap);
+    });
+    wardrobeGroup.add(hamperGroup);
+
+    // 2 Clear Drop-Front Acrylic Sneaker Display Boxes (Z = 0.62)
+    const shoeBoxMat = new THREE.MeshPhysicalMaterial({
+      color: 0xf8fafc,
+      transmission: 0.85,
+      opacity: 0.42,
+      transparent: true,
+      roughness: 0.1
+    });
+    const soleMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.4 });
+    [0.165, 0.325].forEach((sy, sIdx) => {
+      const shoeBox = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.36, 0.15, 0.21, 3, 0.008), shoeBoxMat);
+      shoeBox.position.set(1.43, sy, 0.61);
+      wardrobeGroup.add(shoeBox);
+      // Drop-front silver clasp
+      const clasp = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.016, 0.05), hookMat);
+      clasp.position.set(1.248, sy + 0.04, 0.61);
+      wardrobeGroup.add(clasp);
+
+      // Pair of Sneakers Inside (sole + upper)
+      [-0.048, 0.048].forEach(sz => {
+        const sole = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.25, 0.025, 0.075, 2, 0.01), soleMat);
+        sole.position.set(1.43, sy - 0.052, 0.61 + sz);
+        wardrobeGroup.add(sole);
+        const upper = new THREE.Mesh(
+          new THREE.RoundedBoxGeometry(0.21, 0.055, 0.068, 3, 0.018),
+          new THREE.MeshStandardMaterial({ color: sIdx === 0 ? 0x1e3a8a : 0xdc2626, roughness: 0.7 })
+        );
+        upper.position.set(1.44, sy - 0.015, 0.61 + sz);
+        wardrobeGroup.add(upper);
+      });
+    });
+
+    // B. Right Floor Zone: True Open-Cubby MUJI 6-Drawer Cabinet with Frosted PP Drawers
+    const cabinetMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.32 });
+    const frostedPPMat = new THREE.MeshPhysicalMaterial({
+      color: 0xf1f5f9,
+      transmission: 0.55,
+      opacity: 0.62,
+      transparent: true,
+      roughness: 0.28
+    });
+    const recessMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.45 });
+
+    // Build Open-Front Cabinet Casing Panels (Z in 0.77 to 1.45 -> width 0.68m, X in 1.19 to 1.67, Y in 0.092 to 0.772)
+    // Back panel, Top cap, Bottom cap, Left wall, Center partition, Right wall, 2 Horizontal Dividers
+    const cabBack = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.68, 0.68), cabinetMat);
+    cabBack.position.set(1.662, 0.432, 1.11);
+    wardrobeGroup.add(cabBack);
+    [0.098, 0.324, 0.548, 0.766].forEach(hy => {
+      const hShelf = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.012, 0.68), cabinetMat);
+      hShelf.position.set(1.43, hy, 1.11);
+      wardrobeGroup.add(hShelf);
+    });
+    [0.776, 1.11, 1.444].forEach(vz => {
+      const vWall = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.68, 0.012), cabinetMat);
+      vWall.position.set(1.43, 0.432, vz);
+      wardrobeGroup.add(vWall);
+    });
+
+    // 6 Semi-Translucent Frosted Drawers sitting INSIDE the 6 open cubbies!
+    const drawerCols = [0.943, 1.277];
+    const drawerTiers = [0.211, 0.436, 0.657];
+    const clothStackCols = [
+      [0x3b82f6, 0x93c5fd], [0xf43f5e, 0xfda4af], [0x10b981, 0x6ee7b7],
+      [0xf59e0b, 0xfcd34d], [0x6366f1, 0xa5b4fc], [0x475569, 0x94a3b8]
+    ];
+    drawerCols.forEach((cz, cIdx) => {
+      drawerTiers.forEach((ty, tIdx) => {
+        const pair = clothStackCols[cIdx * 3 + tIdx];
+        // Inner neatly stacked folded garments clearly visible behind translucent PP!
+        const fold1 = new THREE.Mesh(
+          new THREE.RoundedBoxGeometry(0.40, 0.075, 0.25, 2, 0.02),
+          new THREE.MeshStandardMaterial({ color: pair[0], roughness: 0.85 })
+        );
+        fold1.position.set(1.42, ty - 0.04, cz);
+        wardrobeGroup.add(fold1);
+
+        const fold2 = new THREE.Mesh(
+          new THREE.RoundedBoxGeometry(0.38, 0.065, 0.24, 2, 0.02),
+          new THREE.MeshStandardMaterial({ color: pair[1], roughness: 0.85 })
+        );
+        fold2.position.set(1.41, ty + 0.03, cz);
+        wardrobeGroup.add(fold2);
+
+        // Frosted Translucent PP Tub Front (with clear 3mm shadow reveal around perimeter)
+        const dFront = new THREE.Mesh(
+          new THREE.RoundedBoxGeometry(0.016, 0.205, 0.312, 3, 0.008),
+          frostedPPMat
+        );
+        dFront.position.set(1.192, ty, cz);
+        wardrobeGroup.add(dFront);
+
+        // Ergonomic Recessed Finger-Pull Slot
+        const slot = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.022, 0.11), recessMat);
+        slot.position.set(1.183, ty + 0.068, cz);
+        wardrobeGroup.add(slot);
+      });
+    });
+
+    // Hollow Walnut Valet Tray on Top of Drawers (with Wristwatch & Keys)
+    const valetGroup = new THREE.Group();
+    const valetWood = new THREE.MeshStandardMaterial({ color: 0x5c361a, roughness: 0.45 });
+    const vBase = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.008, 0.24), valetWood);
+    vBase.position.set(1.36, 0.776, 0.94);
+    valetGroup.add(vBase);
+    [-0.115, 0.115].forEach(vz => {
+      const vr = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.022, 0.012), valetWood);
+      vr.position.set(1.36, 0.787, 0.94 + vz);
+      valetGroup.add(vr);
+    });
+    [-0.084, 0.084].forEach(vx => {
+      const vr = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.022, 0.24), valetWood);
+      vr.position.set(1.36 + vx, 0.787, 0.94);
+      valetGroup.add(vr);
+    });
+    // Watch dial & leather strap inside tray
+    const watchDial = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.008, 16), hookMat);
+    watchDial.position.set(1.35, 0.784, 0.90);
+    valetGroup.add(watchDial);
+    const watchStrap = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.006, 0.11), leatherMat);
+    watchStrap.position.set(1.35, 0.783, 0.90);
+    valetGroup.add(watchStrap);
+    // Brass Key Fob
+    const keyRing = new THREE.Mesh(new THREE.TorusGeometry(0.015, 0.003, 8, 16), brassMat);
+    keyRing.rotation.x = Math.PI / 2;
+    keyRing.position.set(1.37, 0.783, 0.99);
+    valetGroup.add(keyRing);
+    wardrobeGroup.add(valetGroup);
+
+    // Multi-Layer Folded Knitwear / Cashmere Pile at Z = 1.28
+    [
+      { col: 0xd97706, y: 0.790 },
+      { col: 0xe2e8f0, y: 0.822 }
+    ].forEach(k => {
+      const knit = new THREE.Mesh(
+        new THREE.RoundedBoxGeometry(0.24, 0.032, 0.24, 3, 0.012),
+        new THREE.MeshStandardMaterial({ color: k.col, roughness: 0.9 })
+      );
+      knit.position.set(1.42, k.y, 1.28);
+      wardrobeGroup.add(knit);
+    });
+
+    // 6. Detailed Rimowa-Style Ribbed Suitcases on Top Deck (Y = 1.963 top of shelf)
+    // 28-inch Large Aluminum Suitcase lying flat at Z = 0.58
+    const suit28Group = new THREE.Group();
+    const suit28Mat = new THREE.MeshStandardMaterial({ color: 0xb0b8c4, metalness: 0.85, roughness: 0.25 });
+    const bumperMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.45 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.95, roughness: 0.15 });
+
+    const suit28 = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.45, 0.26, 0.68, 4, 0.028), suit28Mat);
+    suit28.position.set(1.43, 2.093, 0.58);
+    suit28.castShadow = true;
+    suit28Group.add(suit28);
+
+    // 6 Parallel Embossed Shell Grooves
+    for (let g = -2.5; g <= 2.5; g += 1.0) {
+      const rib = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.266, 0.015), suit28Mat);
+      rib.position.set(1.43, 2.093, 0.58 + g * 0.095);
+      suit28Group.add(rib);
+    }
+    // 4 Corner Guard Caps
+    [[1.21, 0.25], [1.65, 0.25], [1.21, 0.91], [1.65, 0.91]].forEach(([cx, cz]) => {
+      const cap = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.05, 0.27, 0.05, 2, 0.01), bumperMat);
+      cap.position.set(cx, 2.093, cz);
+      suit28Group.add(cap);
+    });
+    // TSA Lock + Side Grab Handle + Telescoping End Bar
+    const lockPlate = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.045, 0.14), bumperMat);
+    lockPlate.position.set(1.202, 2.093, 0.58);
+    suit28Group.add(lockPlate);
+    const sideGrab = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.03, 0.025, 0.14, 2, 0.008), bumperMat);
+    sideGrab.position.set(1.195, 2.13, 0.58);
+    suit28Group.add(sideGrab);
+    const teleEnd28 = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.03, 0.025), bumperMat);
+    teleEnd28.position.set(1.43, 2.10, 0.925);
+    suit28Group.add(teleEnd28);
+    wardrobeGroup.add(suit28Group);
+
+    // 20-inch Navy Spinner Carry-On standing on 4 Spinner Wheels resting on Y = 1.963!
+    const suit20Group = new THREE.Group();
+    const suit20Mat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, metalness: 0.45, roughness: 0.38 });
+    // 4 Wheels touching Y = 1.963 -> centers at Y = 1.985
+    [[1.27, 1.15], [1.59, 1.15], [1.27, 1.33], [1.59, 1.33]].forEach(([wx, wz]) => {
+      const spWheel = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.024, 14), bumperMat);
+      spWheel.rotation.z = Math.PI / 2;
+      spWheel.position.set(wx, 1.985, wz);
+      suit20Group.add(spWheel);
+    });
+    const suit20 = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.38, 0.44, 0.24, 4, 0.025), suit20Mat);
+    suit20.position.set(1.43, 2.225, 1.24);
+    suit20.castShadow = true;
+    suit20Group.add(suit20);
+    // Vertical Embossed Ribs
+    [-0.06, 0, 0.06].forEach(rz => {
+      const rib20 = new THREE.Mesh(new THREE.BoxGeometry(0.39, 0.41, 0.012), suit20Mat);
+      rib20.position.set(1.43, 2.225, 1.24 + rz);
+      suit20Group.add(rib20);
+    });
+    // Dual Chrome Telescopic Trolley Tubes + Top Handle Grip
+    [-0.05, 0.05].forEach(tz => {
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.09), chromeMat);
+      tube.position.set(1.53, 2.48, 1.24 + tz);
+      suit20Group.add(tube);
+    });
+    const s20Handle = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.025, 0.026, 0.14, 2, 0.008), bumperMat);
+    s20Handle.position.set(1.53, 2.525, 1.24);
+    suit20Group.add(s20Handle);
+    wardrobeGroup.add(suit20Group);
+
+    // 7. Interactive Articulated Cat-Proof Dust Curtain (防尘防抓防猫毛拉帘)
+    const curtainRail = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 1.34, 16), hookMat);
+    curtainRail.rotation.x = Math.PI / 2;
+    curtainRail.position.set(1.148, 2.13, 0.85);
+    wardrobeGroup.add(curtainRail);
+
+    // Curtain Pivot rooted cleanly at left rail start (Z = 0.20), outside corner post (X = 1.148)
+    const curtainGroup = new THREE.Group();
+    curtainGroup.position.set(1.148, 0, 0.20);
+    const curtainLinenMat = new THREE.MeshStandardMaterial({
+      map: createLinenTexture('#f2ede4', 'rgba(130,115,95,0.08)'),
+      roughness: 0.94
+    });
+
+    const numPleats = 18;
+    const gatheredWidth = 0.15; // 15cm gathered stack when open!
+    for (let i = 0; i < numPleats; i++) {
+      const pz = (i + 0.5) * (gatheredWidth / numPleats);
+      const pxOffset = Math.sin(i * 1.4) * 0.012;
+      const pleat = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.013, 0.016, 2.04, 12),
+        curtainLinenMat
+      );
+      pleat.position.set(pxOffset, 1.10, pz);
+      pleat.castShadow = true;
+      curtainGroup.add(pleat);
+
+      if (i % 2 === 0) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.014, 0.0025, 8, 16), bumperMat);
+        ring.position.set(0, 2.13, pz);
+        curtainGroup.add(ring);
+      }
+    }
+    wardrobeGroup.add(curtainGroup);
+
+    addContactShadow(wardrobeGroup, 0.65, 1.45, 1.43, 0.85, 0.65);
+    const wardrobeRoot = new THREE.Group();
+    wardrobeRoot.position.set(S.furniture.wardrobe.x, 0, S.furniture.wardrobe.z); wardrobeRoot.rotation.y = S.furniture.wardrobe.rotY || 0;
+    wardrobeGroup.position.set(-1.43, 0, -0.85);
+    wardrobeRoot.add(wardrobeGroup);
+    storageGroup.add(wardrobeRoot);
+
+    scene.add(storageGroup);
+
+    // --- 8. Kinematics Physics Controller Logic ---
+    let isDoorOpen = false;
+    let isDrawerOpen = false;
+    let isBucketOpen = false;
+    let isCurtainClosed = false;
+    let wallCutawayMode = 'auto'; // 'auto' (smart occlusion cutaway) | 'closed' (all 4 walls solid)
+
+    function toggleDoor() {
+      playClickSound();
+      isDoorOpen = !isDoorOpen;
+      const targetAngle = isDoorOpen ? (doorHingeGroup.userData.swingSign || 1) * Math.PI * 0.48 : 0;
+      document.getElementById('k-door').classList.toggle('active', isDoorOpen);
+      new TWEEN.Tween(doorHingeGroup.rotation)
+        .to({ y: targetAngle }, 850)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start();
+    }
+
+    function toggleDrawer() {
+      playGlideSound();
+      isDrawerOpen = !isDrawerOpen;
+      const slideSign = (S.bed.underDrawerSide === "east") ? 1 : -1;
+      const targetX = -0.90 + (isDrawerOpen ? slideSign * (S.bed.underDrawerSlide || 0.55) : 0);
+      document.getElementById('k-drawer').classList.toggle('active', isDrawerOpen);
+      new TWEEN.Tween(bedDrawersGroup.position)
+        .to({ x: targetX }, 950)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start();
+    }
+
+    function toggleCurtain() {
+      playGlideSound();
+      isCurtainClosed = !isCurtainClosed;
+      const btn = document.getElementById('k-curtain');
+      btn.classList.toggle('active', isCurtainClosed);
+      btn.innerText = isCurtainClosed ? '🧼 拉开防尘帘' : '🧼 拉上防尘帘';
+      // Scale Z from gathered 0.15m (1.0) to full 1.29m coverage (8.6)
+      const targetScaleZ = isCurtainClosed ? 8.6 : 1.0;
+      new TWEEN.Tween(curtainGroup.scale)
+        .to({ z: targetScaleZ }, 750)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start();
+    }
+
+    function toggleCatBucket() {
+      playClickSound();
+      isBucketOpen = !isBucketOpen;
+      const targetRot = isBucketOpen ? -Math.PI * 0.42 : 0;
+      document.getElementById('k-bucket').classList.toggle('active', isBucketOpen);
+      new TWEEN.Tween(bucketLidPivot.rotation)
+        .to({ x: targetRot }, 550)
+        .easing(TWEEN.Easing.Back.Out)
+        .start();
+    }
+
+    function toggleWallCutaway() {
+      playClickSound();
+      wallCutawayMode = (wallCutawayMode === 'auto') ? 'closed' : 'auto';
+      const btn = document.getElementById('k-walls');
+      btn.classList.toggle('active', wallCutawayMode === 'auto');
+      btn.innerText = wallCutawayMode === 'auto' ? '🧱 智能剖切' : '🧱 封闭墙体';
+    }
+
+    // --- 9. Hotspots Management (Dynamic Object-Tracking Positions) ---
+    const hotspotsData = [
+      {
+        id: 'hs-wardrobe',
+        title: '👗 38+大容量衣柜与双行李箱',
+        anchorObj: wardrobeGroup,
+        localOffset: new THREE.Vector3(1.16, 1.72, 0.85),
+        data: {
+          title: '👗 38+大容量分区衣柜 + 6格MUJI半透抽屉 + 顶层双行李箱',
+          pos: '东侧开阔立面 (长1.30m x 深0.55m x 高2.15m)',
+          size: '长短衣科学分区 + 6格半透抽屉柜 + 棉麻脏衣篮 + 28/20寸双箱位',
+          cat: '点击【防尘帘】可演示天然亚麻遮光帘一键封闭，100% 阻断猫毛与抓挠',
+          mat: '加粗碳素钢管 + E0级橡木层板 + 磨砂PP抽屉 + 天然棉麻防尘帘',
+          price: '¥289.00 (框架含拉帘) + ¥98.00 (6抽屉柜套组)'
+        }
+      },
+      {
+        id: 'hs-drawer',
+        title: '🛏️ 床底双向滑轮扁箱',
+        anchorObj: bedDrawersGroup,
+        localOffset: new THREE.Vector3(0.55, 0.22, -0.75),
+        data: {
+          title: '🛏️ 磨砂半透双向滑轮扁箱 (2件装)',
+          pos: '床底暗空间 (精准适配 22cm 净高，预留 3.2cm 顺滑空隙)',
+          size: '820mm x 650mm x 188mm (含盖与静音万向轮)',
+          cat: '卡扣全密封设计，顺滑推拉之余封死猫咪钻床底卫生死角',
+          mat: '加厚食品级 PP + 静音滚轮',
+          price: '¥79.00'
+        }
+      },
+      {
+        id: 'hs-snack',
+        title: '📚 桌面书立与零食收纳',
+        anchorObj: deskGroup,
+        localOffset: new THREE.Vector3(0.42, 0.98, -0.09),
+        data: {
+          title: '📚 开放分格亚克力书立 + 桌面零食杂物盒',
+          pos: '书桌右侧物理贴合区 (Y=0.77m)',
+          size: '220mm x 220mm x 140mm (分格不倾倒)',
+          cat: '硬壳精装书分槽立放、封口零食归拢立盒，杜绝猫咪扒翻桌面',
+          mat: '高透厚板亚克力 + 防滑硅胶垫',
+          price: '¥36.00'
+        }
+      },
+      {
+        id: 'hs-racket',
+        title: '🏸 羽毛球拍高位壁挂架',
+        anchorObj: racketGroup,
+        localOffset: new THREE.Vector3(-1.7, 1.8, -0.6),
+        data: {
+          title: '🏸 航空铝合金双拍挂架 + 球包球筒专区',
+          pos: '门后高位立面 (挂高 1.8m，完全避让门扇开合半径)',
+          size: '360mm x 120mm x 30mm',
+          cat: '1.8m 高位壁挂远离地面，彻底保护拍线与手胶不被猫抓咬',
+          mat: '阳极氧化铝合金 + 免打孔纳米强力无痕背胶',
+          price: '¥48.00'
+        }
+      },
+      {
+        id: 'hs-cat',
+        title: '🐱 靠墙猫咪专属生活区',
+        anchorObj: catStationGroup,
+        localOffset: new THREE.Vector3(-1.45, 0.42, -0.45),
+        data: {
+          title: '🐱 靠墙猫咪静音角 (10kg密封粮桶+斜口双碗+猫窝+剑麻抓柱)',
+          pos: '西墙安全靠边带 (彻底让出主走廊与床底滑轨动线)',
+          size: '紧贴西墙整齐一字排开，零绊脚路障',
+          cat: '锁定扣密封粮桶防偷吃 + 专属剑麻猫抓柱转移磨爪注意力',
+          mat: '食品级 ABS + 15°护颈陶瓷碗 + 舒棉绒窝 + 天然剑麻柱',
+          price: '¥168.00 (全套含抓柱)'
+        }
+      }
+    ];
+
+    const hotspotsById = Object.fromEntries(hotspotsData.map(h => [h.id, h.data]));
+    let hotspotsVisible = true;
+    const hotspotElems = [];
+
+    hotspotsData.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'hotspot';
+      el.id = item.id;
+      el.innerHTML = '<div class="hotspot-pill">' + item.title + '</div>';
+      el.onclick = () => openDrawer(item.data);
+      document.body.appendChild(el);
+      hotspotElems.push({ elem: el, anchorObj: item.anchorObj, localOffset: item.localOffset });
+    });
+
+    function toggleHotspots() {
+      hotspotsVisible = !hotspotsVisible;
+      document.getElementById('k-hotspots').classList.toggle('active', hotspotsVisible);
+      hotspotElems.forEach(h => h.elem.classList.toggle('hidden', !hotspotsVisible));
+    }
+
+    function openDrawer(data) {
+      closeStyleBomDrawer();
+      document.getElementById('d-title').innerText = data.title;
+      document.getElementById('d-pos').innerText = data.pos;
+      document.getElementById('d-size').innerText = data.size;
+      document.getElementById('d-cat').innerText = data.cat;
+      document.getElementById('d-mat').innerText = data.mat;
+      document.getElementById('d-price').innerText = data.price;
+      document.getElementById('drawer').classList.add('show');
+    }
+    function closeDrawer() { document.getElementById('drawer').classList.remove('show'); }
+    function toggleAnalytics() {
+      const ap = document.getElementById('analytics-panel');
+      ap.classList.toggle('show');
+      document.getElementById('t-analytics').classList.toggle('active', ap.classList.contains('show'));
+    }
+    function openARModal() { document.getElementById('ar-modal').classList.add('show'); }
+    function closeARModal() { document.getElementById('ar-modal').classList.remove('show'); }
+    function exportUSDZ() {
+      alert('正在调用 USDZExporter 生成 1:1 毫米级空间计算模型 (.usdz)！');
+      try {
+        const exporter = new THREE.USDZExporter();
+        exporter.parse(storageGroup, function (result) {
+          const blob = new Blob([result], { type: 'model/vnd.usdz+zip' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'rental_room_storage_1to1.usdz';
+          link.click();
+        });
+      } catch (e) { console.error(e); }
+    }
+
+    // --- 10. Pro Feature A: 3D Laser Tape Measure (源自 GitHub glbim / 3dViewMeasurement) ---
+    let activeTool = 'orbit'; // 'orbit' | 'measure' | 'layout' | 'walk'
+    let measurePtA = null;
+    const measureGroup = new THREE.Group();
+    scene.add(measureGroup);
+    const measureLabels = [];
+
+    const hoverReticle = new THREE.Mesh(
+      new THREE.SphereGeometry(0.022, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0x34d399 })
+    );
+    hoverReticle.visible = false;
+    scene.add(hoverReticle);
+
+    const previewLineGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+    const previewLine = new THREE.Line(previewLineGeom, new THREE.LineBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.85 }));
+    previewLine.visible = false;
+    scene.add(previewLine);
+
+    const liveMeasureTag = document.createElement('div');
+    liveMeasureTag.className = 'measure-badge';
+    liveMeasureTag.innerHTML = '<div class="measure-pill" style="background:rgba(15,23,42,0.9);border-color:#38bdf8;">0.0 cm</div>';
+    liveMeasureTag.style.display = 'none';
+    document.body.appendChild(liveMeasureTag);
+
+    function addPermanentMeasurement(pA, pB) {
+      const distCm = (pA.distanceTo(pB) * 100).toFixed(1);
+      const lineGeom = new THREE.BufferGeometry().setFromPoints([pA.clone(), pB.clone()]);
+      const line = new THREE.Line(lineGeom, new THREE.LineBasicMaterial({ color: 0x10b981, linewidth: 2 }));
+      measureGroup.add(line);
+
+      const dotMat = new THREE.MeshBasicMaterial({ color: 0x34d399 });
+      [pA, pB].forEach(pt => {
+        const d = new THREE.Mesh(new THREE.SphereGeometry(0.022, 12, 12), dotMat);
+        d.position.copy(pt);
+        measureGroup.add(d);
+      });
+
+      const mid = new THREE.Vector3().addVectors(pA, pB).multiplyScalar(0.5);
+      const badge = document.createElement('div');
+      badge.className = 'measure-badge';
+      badge.innerHTML = `<div class="measure-pill">📏 ${distCm} cm</div>`;
+      document.body.appendChild(badge);
+      measureLabels.push({ elem: badge, pos: mid });
+      playClickSound();
+    }
+
+    function clearMeasurements() {
+      while (measureGroup.children.length > 0) measureGroup.remove(measureGroup.children[0]);
+      measureLabels.forEach(m => m.elem.remove());
+      measureLabels.length = 0;
+      measurePtA = null;
+      previewLine.visible = false;
+      liveMeasureTag.style.display = 'none';
+    }
+
+    // --- 11. Pro Feature B: Layout Drag/Rotate & Live Collision Engine (源自 blueprint3d / TransformControls) ---
+    const movableItems = [
+      { id: 'wardrobe', name: '👗 防尘挂衣柜 (1.3×0.55m)', obj: wardrobeRoot, initPos: wardrobeRoot.position.clone(), initRot: 0, isRug: false },
+      { id: 'desk', name: '🖥️ 学习工作台 (1.2×0.6m)', obj: deskGroup, initPos: deskGroup.position.clone(), initRot: 0, isRug: false },
+      { id: 'chair', name: '💺 工学旋转椅', obj: chairGroup, initPos: chairGroup.position.clone(), initRot: 0, isRug: false },
+      { id: 'cat', name: '🐱 靠墙猫咪生活区', obj: catRoot, initPos: catRoot.position.clone(), initRot: 0, isRug: false },
+      { id: 'rug', name: '🧶 剑麻防抓地毯', obj: sisalRug, initPos: sisalRug.position.clone(), initRot: 0, isRug: true }
+    ];
+    let selectedMovable = null;
+    let isDraggingFurniture = false;
+    const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const dragOffset = new THREE.Vector3();
+
+    function computeDoorSwingBox() {
+      const dw = S.door.width || 0.90;
+      const off = S.door.offset || -1.65;
+      const w = S.door.wall || 'west';
+      if (w === 'west')  return new THREE.Box3(new THREE.Vector3(-HX + 0.06, 0.02, off - dw/2), new THREE.Vector3(-HX + 0.06 + dw, 2.08, off + dw/2));
+      if (w === 'east')  return new THREE.Box3(new THREE.Vector3(HX - 0.06 - dw, 0.02, off - dw/2), new THREE.Vector3(HX - 0.06, 2.08, off + dw/2));
+      if (w === 'north') return new THREE.Box3(new THREE.Vector3(off - dw/2, 0.02, -HZ + 0.06), new THREE.Vector3(off + dw/2, 2.08, -HZ + 0.06 + dw));
+      return new THREE.Box3(new THREE.Vector3(off - dw/2, 0.02, HZ - 0.06 - dw), new THREE.Vector3(off + dw/2, 2.08, HZ - 0.06));
+    }
+    const fixedBedBox = (function() {
+      const b = new THREE.Box3();
+      bedGroup.updateMatrixWorld(true);
+      bedGroup.traverse(c => { if (c.isMesh && !c.userData.isShadow) b.expandByObject(c); });
+      return b;
+    })();
+    const doorSwingBox = computeDoorSwingBox();
+
+    function getTightBox(rootObj) {
+      const box = new THREE.Box3();
+      rootObj.updateMatrixWorld(true);
+      rootObj.traverse(child => {
+        if (child.isMesh && !child.userData.isShadow) {
+          if (!child.geometry.boundingBox) child.geometry.computeBoundingBox();
+          const b = child.geometry.boundingBox.clone();
+          b.applyMatrix4(child.matrixWorld);
+          box.union(b);
+        }
+      });
+      return box;
+    }
+
+    const selectionHelper = new THREE.Box3Helper(new THREE.Box3(), 0x10b981);
+    selectionHelper.visible = false;
+    scene.add(selectionHelper);
+
+    const doorWarnHelper = new THREE.Box3Helper(doorSwingBox, 0xef4444);
+    doorWarnHelper.visible = false;
+    scene.add(doorWarnHelper);
+
+    function evaluateSelectedCollision() {
+      if (!selectedMovable) return { ok: true, msg: '点击场景中衣柜 / 书桌 / 椅子 / 猫区 / 地毯即可拖拽移位' };
+      const box = getTightBox(selectedMovable.obj);
+      selectionHelper.box.copy(box);
+      selectionHelper.visible = true;
+
+      // Shrink tolerance slightly by 1cm for touch tolerance
+      const testBox = box.clone().expandByScalar(-0.012);
+      const issues = [];
+
+      if (testBox.min.x < -1.725 || testBox.max.x > 1.725 || testBox.min.z < -2.325 || testBox.max.z > 2.325) {
+        issues.push('超出墙体边界');
+      }
+      if (!selectedMovable.isRug && testBox.intersectsBox(doorSwingBox)) {
+        issues.push('阻塞入户门开合扇区');
+        doorWarnHelper.visible = true;
+      } else {
+        doorWarnHelper.visible = false;
+      }
+      if (!selectedMovable.isRug && testBox.intersectsBox(fixedBedBox)) {
+        issues.push('与双人床重合');
+      }
+      if (!selectedMovable.isRug) {
+        movableItems.forEach(other => {
+          if (other !== selectedMovable && !other.isRug) {
+            const oBox = getTightBox(other.obj).expandByScalar(-0.015);
+            if (testBox.intersectsBox(oBox)) issues.push('与' + other.name.slice(2, 7) + '碰撞');
+          }
+        });
+      }
+
+      if (issues.length > 0) {
+        selectionHelper.material.color.setHex(0xef4444);
+        return { ok: false, msg: '⚠️ 碰撞预警: ' + issues.join('、') };
+      } else {
+        selectionHelper.material.color.setHex(0x10b981);
+        const minWallDist = Math.min(
+          Math.abs(box.min.x - (-1.72)),
+          Math.abs(1.72 - box.max.x),
+          Math.abs(box.min.z - (-2.32)),
+          Math.abs(2.32 - box.max.z)
+        ) * 100;
+        return { ok: true, msg: `✅ 无干涉 (最近墙距 ${minWallDist.toFixed(0)} cm)` };
+      }
+    }
+
+    function rotateSelectedFurniture() {
+      if (!selectedMovable) return;
+      selectedMovable.obj.rotation.y += Math.PI / 2;
+      playClickSound();
+      updateModeBanner();
+    }
+
+    function snapSelectedToWall() {
+      if (!selectedMovable) return;
+      const box = getTightBox(selectedMovable.obj);
+      const gaps = [
+        { side: 'west',  d: Math.abs(box.min.x - (-1.71)), dx: -1.71 - box.min.x, dz: 0 },
+        { side: 'east',  d: Math.abs(1.71 - box.max.x),    dx: 1.71 - box.max.x,  dz: 0 },
+        { side: 'north', d: Math.abs(box.min.z - (-2.31)), dx: 0, dz: -2.31 - box.min.z },
+        { side: 'south', d: Math.abs(2.31 - box.max.z),    dx: 0, dz: 2.31 - box.max.z }
+      ].sort((a, b) => a.d - b.d);
+      selectedMovable.obj.position.x += gaps[0].dx;
+      selectedMovable.obj.position.z += gaps[0].dz;
+      playGlideSound();
+      updateModeBanner();
+    }
+
+    function resetLayoutPositions() {
+      movableItems.forEach(item => {
+        item.obj.position.copy(item.initPos);
+        item.obj.rotation.y = item.initRot;
+      });
+      doorWarnHelper.visible = false;
+      playGlideSound();
+      updateModeBanner();
+    }
+
+    // --- 12. Pro Feature C: First-Person Human (1.70m) & Cat-Eye (0.28m) Walkthrough ---
+    let walkProfile = 'human'; // 'human' | 'cat'
+    let walkYaw = 0;
+    let walkPitch = 0;
+    const walkKeys = { w: false, a: false, s: false, d: false };
+    let isWalkLooking = false;
+    let lastLookPt = { x: 0, y: 0 };
+
+    function setPadKey(k, down) { walkKeys[k] = down; }
+
+    window.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      if (k === 'w' || k === 'arrowup') walkKeys.w = true;
+      if (k === 's' || k === 'arrowdown') walkKeys.s = true;
+      if (k === 'a' || k === 'arrowleft') walkKeys.a = true;
+      if (k === 'd' || k === 'arrowright') walkKeys.d = true;
+      if (k === 'escape' && activeTool !== 'orbit') setActiveTool('orbit');
+    });
+    window.addEventListener('keyup', (e) => {
+      const k = e.key.toLowerCase();
+      if (k === 'w' || k === 'arrowup') walkKeys.w = false;
+      if (k === 's' || k === 'arrowdown') walkKeys.s = false;
+      if (k === 'a' || k === 'arrowleft') walkKeys.a = false;
+      if (k === 'd' || k === 'arrowright') walkKeys.d = false;
+    });
+
+    // Mode Switching State Machine
+    function setActiveTool(mode, subOption) {
+      if (activeTool === mode && mode !== 'walk') mode = 'orbit';
+      if (activeTool === 'walk' && mode === 'walk' && walkProfile === subOption) mode = 'orbit';
+
+      activeTool = mode;
+      if (mode === 'walk') walkProfile = subOption || 'human';
+
+      document.getElementById('t-measure').classList.toggle('active', mode === 'measure');
+      document.getElementById('t-layout').classList.toggle('warn-active', mode === 'layout');
+      document.getElementById('t-walk').classList.toggle('active', mode === 'walk' && walkProfile === 'human');
+      document.getElementById('t-catview').classList.toggle('active', mode === 'walk' && walkProfile === 'cat');
+
+      hoverReticle.visible = false;
+      if (mode !== 'measure') {
+        measurePtA = null;
+        previewLine.visible = false;
+        liveMeasureTag.style.display = 'none';
+      }
+      if (mode !== 'layout') {
+        selectionHelper.visible = false;
+        doorWarnHelper.visible = false;
+        selectedMovable = null;
+      }
+
+      document.getElementById('walk-pad').classList.toggle('show', mode === 'walk');
+
+      if (mode === 'walk') {
+        controls.enabled = false;
+        const eyeY = walkProfile === 'cat' ? 0.28 : 1.70;
+        camera.position.set(0.25, eyeY, 1.65);
+        walkYaw = 0.36;
+        walkPitch = walkProfile === 'cat' ? 0.06 : -0.12;
+        const euler = new THREE.Euler(walkPitch, walkYaw, 0, 'YXZ');
+        camera.quaternion.setFromEuler(euler);
+      } else {
+        controls.enabled = true;
+      }
+      updateModeBanner();
+    }
+
+    function toggleMeasureMode() { setActiveTool('measure'); }
+    function toggleLayoutMode() { setActiveTool('layout'); }
+    function toggleWalkMode(profile) { setActiveTool('walk', profile); }
+
+    function updateModeBanner() {
+      const banner = document.getElementById('mode-banner');
+      banner.classList.remove('show', 'danger', 'ok');
+      if (activeTool === 'orbit') return;
+
+      banner.classList.add('show');
+      if (activeTool === 'measure') {
+        banner.innerHTML = `
+          <span>📏 <strong>3D 激光测距模式</strong>：左键依次点击房间任意两点生成精确尺寸标尺</span>
+          <button class="mode-pill-btn" onclick="clearMeasurements()">🧹 清空标尺</button>
+          <button class="mode-pill-btn danger" onclick="setActiveTool('orbit')">退出 (ESC)</button>
+        `;
+      } else if (activeTool === 'layout') {
+        const res = evaluateSelectedCollision();
+        if (!res.ok) banner.classList.add('danger');
+        else if (selectedMovable) banner.classList.add('ok');
+        const selText = selectedMovable ? `<strong>${selectedMovable.name}</strong> · ${res.msg}` : res.msg;
+        banner.innerHTML = `
+          <span>🖱️ <strong>摆位调优</strong>：${selText}</span>
+          ${selectedMovable ? '<button class="mode-pill-btn" onclick="rotateSelectedFurniture()">↻ 旋转90°</button><button class="mode-pill-btn" onclick="snapSelectedToWall()">🧲 靠墙吸附</button>' : ''}
+          <button class="mode-pill-btn" onclick="resetLayoutPositions()">↩️ 复位</button>
+          <button class="mode-pill-btn danger" onclick="setActiveTool('orbit')">完成 (ESC)</button>
+        `;
+      } else if (activeTool === 'walk') {
+        const eyeLabel = walkProfile === 'cat' ? '🐾 猫咪低视角 (0.28m)' : '🚶 真人平视漫游 (1.70m)';
+        banner.innerHTML = `
+          <span><strong>${eyeLabel}</strong>：W/A/S/D 移动 · 鼠标按住左键拖拽环顾</span>
+          <button class="mode-pill-btn" onclick="toggleWalkMode(walkProfile === 'cat' ? 'human' : 'cat')">切换 ${walkProfile === 'cat' ? '真人视角' : '猫咪视角'}</button>
+          <button class="mode-pill-btn danger" onclick="setActiveTool('orbit')">退出漫游 (ESC)</button>
+        `;
+      }
+    }
+
+    // --- 13. Pro Feature D: 2D Architectural Live Minimap + 3D Blender-Style ViewCube ---
+    function toggleMinimap() {
+      document.getElementById('minimap-card').classList.toggle('collapsed');
+    }
+
+    const mmCanvas = document.getElementById('minimap-canvas');
+    const mmCtx = mmCanvas.getContext('2d');
+    const MM_SCALE = Math.min(134 / RW, 178 / RD);
+    function worldToMM(wx, wz) {
+      return [mmCanvas.width / 2 + wx * MM_SCALE, mmCanvas.height / 2 + wz * MM_SCALE];
+    }
+
+    function drawMinimap() {
+      if (document.getElementById('minimap-card').classList.contains('collapsed')) return;
+      const ctx = mmCtx;
+      const scale = MM_SCALE;
+      ctx.clearRect(0, 0, mmCanvas.width, mmCanvas.height);
+
+      // Dynamic Room Bounds
+      const [rx0, rz0] = worldToMM(-HX + 0.08, -HZ + 0.08);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(rx0, rz0, (RW - 0.16) * scale, (RD - 0.16) * scale);
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(rx0, rz0, (RW - 0.16) * scale, (RD - 0.16) * scale);
+
+      // Door Exclusion Highlight Box from ROOM_SPEC
+      const [dx0, dz0] = worldToMM(doorSwingBox.min.x, doorSwingBox.min.z);
+      const [dx1, dz1] = worldToMM(doorSwingBox.max.x, doorSwingBox.max.z);
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.16)';
+      ctx.fillRect(dx0, dz0, dx1 - dx0, dz1 - dz0);
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.75)';
+      ctx.setLineDash([3, 3]);
+      ctx.strokeRect(dx0, dz0, dx1 - dx0, dz1 - dz0);
+      ctx.setLineDash([]);
+
+      // Fixed Bed footprint
+      const [bx0, bz0] = worldToMM(fixedBedBox.min.x, fixedBedBox.min.z);
+      const [bx1, bz1] = worldToMM(fixedBedBox.max.x, fixedBedBox.max.z);
+      ctx.fillStyle = 'rgba(100, 116, 139, 0.65)';
+      ctx.fillRect(bx0, bz0, bx1 - bx0, bz1 - bz0);
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bx0, bz0, bx1 - bx0, bz1 - bz0);
+
+      // Dynamic Under-Bed Drawers if open!
+      if (isDrawerOpen) {
+        const slideOff = (bedDrawersGroup.position.x + 0.90);
+        const dx = (S.bed.x - S.bed.width/2 + 0.08) + slideOff;
+        [ -1.65, -0.75 ].forEach(bz => {
+          const [ubx, ubz] = worldToMM(dx, bz - 0.40);
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.55)';
+          ctx.fillRect(ubx, ubz, 0.65 * scale, 0.80 * scale);
+        });
+      }
+
+      // Dynamic Movable Furniture Footprints
+      movableItems.forEach(item => {
+        const b = getTightBox(item.obj);
+        const [x1, z1] = worldToMM(b.min.x, b.min.z);
+        const [x2, z2] = worldToMM(b.max.x, b.max.z);
+        if (item.isRug) {
+          ctx.fillStyle = 'rgba(215, 196, 167, 0.22)';
+          ctx.fillRect(x1, z1, x2 - x1, z2 - z1);
+        } else {
+          const isSel = (selectedMovable === item);
+          ctx.fillStyle = isSel ? 'rgba(16, 185, 129, 0.7)' : 'rgba(59, 130, 246, 0.5)';
+          ctx.fillRect(x1, z1, x2 - x1, z2 - z1);
+          ctx.strokeStyle = isSel ? '#34d399' : '#60a5fa';
+          ctx.strokeRect(x1, z1, x2 - x1, z2 - z1);
+        }
+      });
+
+      // Live Camera Cone & Position Arrow
+      const dir = new THREE.Vector3();
+      camera.getWorldDirection(dir);
+      const [camMx, camMz] = worldToMM(
+        Math.max(-1.8, Math.min(1.8, camera.position.x)),
+        Math.max(-2.4, Math.min(2.4, camera.position.z))
+      );
+      const yaw2D = Math.atan2(dir.z, dir.x);
+      ctx.save();
+      ctx.translate(camMx, camMz);
+      ctx.rotate(yaw2D);
+      ctx.fillStyle = 'rgba(250, 204, 21, 0.28)';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(24, -12);
+      ctx.lineTo(24, 12);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.arc(0, 0, 3.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Minimap Click to Teleport/Focus Camera
+    mmCanvas.addEventListener('click', (e) => {
+      const rect = mmCanvas.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const wx = (px - mmCanvas.width / 2) / MM_SCALE;
+      const wz = (py - mmCanvas.height / 2) / MM_SCALE;
+      const clampedX = Math.max(-1.6, Math.min(1.6, wx));
+      const clampedZ = Math.max(-2.1, Math.min(2.1, wz));
+      if (activeTool === 'walk') {
+        camera.position.x = clampedX;
+        camera.position.z = clampedZ;
+      } else {
+        tweenCam({ x: clampedX - 1.2, y: 1.8, z: clampedZ + 1.4 }, { x: clampedX, y: 0.75, z: clampedZ }, 650);
+      }
+      playClickSound();
+    });
+
+    // 3D Blender-Style Scissor ViewCube Gizmo Scene
+    const gizmoScene = new THREE.Scene();
+    const gizmoCamera = new THREE.PerspectiveCamera(32, 1, 0.1, 20);
+    gizmoScene.add(new THREE.AmbientLight(0xffffff, 1.0));
+
+    function makeFaceMat(label, bgHex) {
+      const cv = document.createElement('canvas');
+      cv.width = 128; cv.height = 128;
+      const cx = cv.getContext('2d');
+      cx.fillStyle = bgHex;
+      cx.fillRect(0, 0, 128, 128);
+      cx.strokeStyle = 'rgba(255,255,255,0.45)';
+      cx.lineWidth = 6;
+      cx.strokeRect(3, 3, 122, 122);
+      cx.fillStyle = '#ffffff';
+      cx.font = 'bold 34px -apple-system, sans-serif';
+      cx.textAlign = 'center';
+      cx.textBaseline = 'middle';
+      cx.fillText(label, 64, 64);
+      return new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv) });
+    }
+    const gizmoCubeMats = [
+      makeFaceMat('东 E', '#dc2626'), // +X (0)
+      makeFaceMat('西 W', '#991b1b'), // -X (1)
+      makeFaceMat('顶 T', '#2563eb'), // +Y (2)
+      makeFaceMat('底 B', '#1e3a8a'), // -Y (3)
+      makeFaceMat('南 S', '#059669'), // +Z (4)
+      makeFaceMat('北 N', '#065f46')  // -Z (5)
+    ];
+    const gizmoCube = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1.15, 1.15), gizmoCubeMats);
+    gizmoScene.add(gizmoCube);
+
+    // Gizmo Axis Lines
+    const axisLen = 0.95;
+    [
+      { dir: [axisLen, 0, 0], col: 0xef4444 },
+      { dir: [0, axisLen, 0], col: 0x3b82f6 },
+      { dir: [0, 0, axisLen], col: 0x10b981 }
+    ].forEach(ax => {
+      const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(...ax.dir)]);
+      gizmoScene.add(new THREE.Line(g, new THREE.LineBasicMaterial({ color: ax.col })));
+    });
+
+    document.getElementById('viewcube-overlay').addEventListener('click', (e) => {
+      if (activeTool === 'walk') setActiveTool('orbit');
+      const rect = e.currentTarget.getBoundingClientRect();
+      const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const ny = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      const gRay = new THREE.Raycaster();
+      gRay.setFromCamera(new THREE.Vector2(nx, ny), gizmoCamera);
+      const hits = gRay.intersectObject(gizmoCube);
+      if (hits.length > 0) {
+        const fi = hits[0].face.materialIndex;
+        const center = { x: 0, y: 0.75, z: 0 };
+        if (fi === 0) tweenCam({ x: 5.2, y: 1.8, z: 0.01 }, center, 700);       // +X East
+        else if (fi === 1) tweenCam({ x: -5.2, y: 1.8, z: 0.01 }, center, 700); // -X West
+        else if (fi === 2) tweenCam({ x: 0.01, y: 7.8, z: 0.01 }, {x:0,y:0,z:0}, 700); // +Y Top
+        else if (fi === 4) tweenCam({ x: 0.01, y: 1.8, z: 5.8 }, center, 700);  // +Z South
+        else if (fi === 5) tweenCam({ x: 0.01, y: 1.8, z: -5.8 }, center, 700); // -Z North
+        else tweenCam(camPresets.iso.pos, camPresets.iso.target, 700);
+        playClickSound();
+      } else {
+        setCam('iso');
+      }
+    });
+
+    // --- 14. Pro Feature E: Day / Night Lighting Toggle ---
+    let isNightMode = false;
+    function toggleDayNight() {
+      isNightMode = !isNightMode;
+      playClickSound();
+      const btn = document.getElementById('t-daynight');
+      btn.classList.toggle('warn-active', isNightMode);
+      btn.innerText = isNightMode ? '☀️ 切换日光' : '🌙 夜晚开灯';
+
+      if (isNightMode) {
+        scene.background.setHex(0x04060b);
+        sunLight.intensity = 0.14;
+        sunLight.color.setHex(0x93c5fd);
+        hemiLight.intensity = 0.25;
+        ambLight.intensity = 0.20;
+        ceilingFill.color.setHex(0xffd29d);
+        ceilingFill.intensity = 1.45;
+        deskLight.intensity = 1.75;
+        glassMat.color.setHex(0x1e293b);
+        glassMat.opacity = 0.85;
+      } else {
+        scene.background.setHex(0x0b0f17);
+        sunLight.intensity = 1.35;
+        sunLight.color.setHex(0xfff2dc);
+        hemiLight.intensity = 0.65;
+        ambLight.intensity = 0.38;
+        ceilingFill.color.setHex(0xfff8ee);
+        ceilingFill.intensity = 0.55;
+        deskLight.intensity = 0.85;
+        glassMat.color.setHex(0xbfdbfe);
+        glassMat.opacity = 0.55;
+      }
+    }
+
+    // --- 15. Pro Feature F: Multi-Style Theme Switcher & Interactive BOM Shopping Checklist ---
+    const roomStyles = {
+      muji: {
+        tag: 'v2.2 治愈原木',
+        shelfCol: 0xffffff, frameCol: 0x1e293b, rugCol: 0xd7c4a7, curtainCol: 0xf2ede4,
+        cabinetCol: 0xf8fafc, lidCol: 0x3b82f6, duvetCol: 0x3b4a5e, useWoodTex: true,
+        bom: [
+          { id: 'b1', name: '1.3m 模块化碳钢挂衣柜 (含亚麻防尘帘)', spec: '1300×550×2150mm 承重180kg 含行李顶架', price: 289 },
+          { id: 'b2', name: 'MUJI 同款 6 格磨砂 PP 抽屉柜', spec: '2列×3层 模块化防尘叠衣抽屉', price: 98 },
+          { id: 'b3', name: '日式棉麻脏衣篮 + 高透磁吸鞋盒×2', spec: '天然棉麻皮革把手 + 亚克力鞋盒', price: 65 },
+          { id: 'b4', name: '床底 22cm 双向滑轮密封扁箱 (2件装)', spec: '820×650×188mm 食品级 PP + 万向轮', price: 79 },
+          { id: 'b5', name: '门后航空铝羽拍双挂架 + 球筒卡扣', spec: '免打孔无痕纳米胶 高位 1.8m 防猫抓', price: 48 },
+          { id: 'b6', name: '桌面开放分格亚克力书立 + 零食盒', spec: '加厚高透亚克力 物理防滑贴合', price: 36 },
+          { id: 'b7', name: '西墙靠边猫咪安全角全套', spec: '10kg锁扣粮桶 + 15°双碗 + 绒窝 + 剑麻抓柱', price: 168 },
+          { id: 'b8', name: '天然剑麻耐抓地毯 (1.0×1.95m)', spec: '高密度耐磨编织 防猫咪抽丝', price: 88 }
+        ]
+      },
+      basic: {
+        tag: 'v1.0 极简免打孔',
+        shelfCol: 0xf1f5f9, frameCol: 0x64748b, rugCol: 0xcbd5e1, curtainCol: 0xffffff,
+        cabinetCol: 0xf1f5f9, lidCol: 0x60a5fa, duvetCol: 0x64748b, useWoodTex: false,
+        bom: [
+          { id: 'b1', name: '基础免打孔碳钢挂衣架 + 涤棉布帘', spec: '1300×500×2050mm 轻量快装', price: 168 },
+          { id: 'b2', name: '透明叠加塑料抽屉收纳盒 (6只)', spec: 'PP 塑料带轮基础款', price: 59 },
+          { id: 'b3', name: '床底扁平防潮收纳箱 (2件装)', spec: '带滑轮卡扣防猫钻', price: 58 },
+          { id: 'b4', name: '门背免打孔高强双钩 + 球拍挂绳', spec: '零墙面损伤', price: 24 },
+          { id: 'b5', name: '桌面简约分格书立架', spec: '塑料加厚分格', price: 19 },
+          { id: 'b6', name: '猫咪密封粮桶 + 瓷碗基础套组', spec: '防偷吃锁扣 + 简易抓板', price: 89 }
+        ]
+      },
+      tech: {
+        tag: 'v2.0 黑金机能',
+        shelfCol: 0x27272a, frameCol: 0x09090b, rugCol: 0x334155, curtainCol: 0x1e293b,
+        cabinetCol: 0x1e293b, lidCol: 0xd97706, duvetCol: 0x0f172a, useWoodTex: false,
+        bom: [
+          { id: 'b1', name: '工业黑重型冷轧钢衣柜 + 遮光黑帘', spec: '黑金哑光喷涂 承重 220kg 行李专属层', price: 368 },
+          { id: 'b2', name: '黑透战术机能 6 格抽屉柜', spec: '熏黑半透面板 + 铝合金拉手', price: 145 },
+          { id: 'b3', name: '冷轧钢门后洞洞板 + 球拍展陈架', spec: '配套挂钩+球筒磁吸支架', price: 128 },
+          { id: 'b4', name: '床底哑光黑金滑轮扁箱 (2件装)', spec: '全黑防尘抗压', price: 96 },
+          { id: 'b5', name: '桌面机能铝制书立 + 理线托盘', spec: '哑光阳极氧化铝', price: 68 },
+          { id: 'b6', name: '黑武士密封粮桶 + 实木猫抓柱组', spec: '防潮避光款', price: 188 },
+          { id: 'b7', name: '深空灰高密阻燃编织地毯', spec: '短绒耐抓吸音', price: 129 }
+        ]
+      },
+      camping: {
+        tag: 'v2.1 都市露营',
+        shelfCol: 0xb68d5c, frameCol: 0x3f4e37, rugCol: 0xd4b483, curtainCol: 0xe6dec8,
+        cabinetCol: 0x4b5842, lidCol: 0xb45309, duvetCol: 0x4d5d43, useWoodTex: true,
+        bom: [
+          { id: 'b1', name: '山系军绿钢管衣柜 + 卡其帆布防尘帘', spec: '搬家快拆结构 行李厢直装版', price: 319 },
+          { id: 'b2', name: '牧高笛/山系侧开折叠箱 (6格组合)', spec: '军绿箱体 搬家免打包直接装车', price: 198 },
+          { id: 'b3', name: '战术伞绳门后球拍网兜挂架', spec: '户外风模块化织带挂板', price: 58 },
+          { id: 'b4', name: '床底军绿折叠轮箱 (2件装)', spec: '可折叠平放搬运', price: 89 },
+          { id: 'b5', name: '沙色加厚耐磨剑麻地毯 + 猫抓柱', spec: '原生态剑麻材质', price: 148 },
+          { id: 'b6', name: '露营风户外密封猫粮桶 + 竹制碗架', spec: '双层锁鲜扣', price: 158 }
+        ]
+      }
+    };
+
+    let currentStyleKey = 'muji';
+    const checkedBomIds = new Set();
+
+    function applyRoomStyle(styleKey) {
+      const st = roomStyles[styleKey];
+      if (!st) return;
+      currentStyleKey = styleKey;
+      playClickSound();
+
+      // Lock architecture 100%, update ONLY organizer materials & aesthetics!
+      wFrameMat.color.setHex(st.frameCol);
+      wShelfMat.map = st.useWoodTex ? woodTex : null;
+      wShelfMat.color.setHex(st.shelfCol);
+      wShelfMat.needsUpdate = true;
+      cabinetMat.color.setHex(st.cabinetCol);
+      curtainLinenMat.color.setHex(st.curtainCol);
+      sisalMat.color.setHex(st.rugCol);
+      bucketLid.material.color.setHex(st.lidCol);
+      duvet.material.color.setHex(st.duvetCol);
+
+      document.getElementById('active-style-badge').innerText = st.tag;
+      document.querySelectorAll('.style-card').forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-style') === styleKey);
+      });
+      renderBomList();
+    }
+
+    function renderBomList() {
+      const st = roomStyles[currentStyleKey];
+      const listEl = document.getElementById('bom-list');
+      listEl.innerHTML = '';
+      let total = 0;
+      let unchecked = 0;
+
+      st.bom.forEach(item => {
+        const key = currentStyleKey + '_' + item.id;
+        const isChecked = checkedBomIds.has(key);
+        total += item.price;
+        if (!isChecked) unchecked += item.price;
+
+        const row = document.createElement('label');
+        row.className = 'bom-item' + (isChecked ? ' checked' : '');
+        row.innerHTML = `
+          <input type="checkbox" ${isChecked ? 'checked' : ''} />
+          <div class="bom-info">
+            <div class="bom-name">${item.name}</div>
+            <div class="bom-spec">${item.spec}</div>
+          </div>
+          <div class="bom-cost">¥${item.price}</div>
+        `;
+        row.querySelector('input').addEventListener('change', (e) => {
+          if (e.target.checked) checkedBomIds.add(key);
+          else checkedBomIds.delete(key);
+          renderBomList();
+        });
+        listEl.appendChild(row);
+      });
+
+      document.getElementById('bom-total-badge').innerText = `总计 ¥${total} · 待购 ¥${unchecked}`;
+    }
+    renderBomList();
+
+    function copyBomMarkdown() {
+      const st = roomStyles[currentStyleKey];
+      const lines = [`# 整屋收纳采购清单 (${st.tag})`, ''];
+      let sum = 0;
+      st.bom.forEach(i => {
+        const done = checkedBomIds.has(currentStyleKey + '_' + i.id) ? 'x' : ' ';
+        lines.push(`- [${done}] **${i.name}** (${i.spec}) — ¥${i.price}`);
+        sum += i.price;
+      });
+      lines.push('', `**预估整屋总计：¥${sum}**`);
+      const text = lines.join('\n');
+      if (navigator.clipboard) navigator.clipboard.writeText(text).catch(()=>{});
+      alert('已整理并复制以下采购清单：\n\n' + text);
+    }
+
+    function toggleStyleBomDrawer() {
+      closeDrawer();
+      const d = document.getElementById('style-bom-drawer');
+      d.classList.toggle('show');
+      document.getElementById('t-stylebom').classList.toggle('active', d.classList.contains('show'));
+    }
+    function closeStyleBomDrawer() {
+      document.getElementById('style-bom-drawer').classList.remove('show');
+      document.getElementById('t-stylebom').classList.remove('active');
+    }
+
+    // --- 16. Unified Mouse Pointer Interaction Router (Orbit / Measure / Layout / Walkthrough) ---
+    const raycaster = new THREE.Raycaster();
+    const mousePos = new THREE.Vector2();
+    let pointerDownPt = { x: 0, y: 0 };
+
+    function getSceneInteractables() {
+      return [roomGroup, furnitureGroup, storageGroup];
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      pointerDownPt = { x: e.clientX, y: e.clientY };
+
+      if (activeTool === 'walk' && e.button === 0) {
+        isWalkLooking = true;
+        lastLookPt = { x: e.clientX, y: e.clientY };
+        return;
+      }
+
+      if (activeTool === 'layout' && e.button === 0) {
+        mousePos.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mousePos.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mousePos, camera);
+
+        let hitMovable = null;
+        for (const item of movableItems) {
+          if (raycaster.intersectObject(item.obj, true).length > 0) {
+            hitMovable = item;
+            break;
+          }
+        }
+        if (hitMovable) {
+          selectedMovable = hitMovable;
+          isDraggingFurniture = true;
+          controls.enabled = false;
+          const planePt = new THREE.Vector3();
+          if (raycaster.ray.intersectPlane(floorPlane, planePt)) {
+            dragOffset.copy(selectedMovable.obj.position).sub(planePt);
+          }
+          updateModeBanner();
+        }
+      }
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      mousePos.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mousePos.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      if (activeTool === 'walk' && isWalkLooking) {
+        const dx = e.clientX - lastLookPt.x;
+        const dy = e.clientY - lastLookPt.y;
+        lastLookPt = { x: e.clientX, y: e.clientY };
+        walkYaw -= dx * 0.004;
+        walkPitch = Math.max(-1.1, Math.min(1.1, walkPitch - dy * 0.004));
+        camera.quaternion.setFromEuler(new THREE.Euler(walkPitch, walkYaw, 0, 'YXZ'));
+        return;
+      }
+
+      if (activeTool === 'layout' && isDraggingFurniture && selectedMovable) {
+        raycaster.setFromCamera(mousePos, camera);
+        const planePt = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(floorPlane, planePt)) {
+          selectedMovable.obj.position.x = planePt.x + dragOffset.x;
+          selectedMovable.obj.position.z = planePt.z + dragOffset.z;
+          updateModeBanner();
+        }
+        return;
+      }
+
+      if (activeTool === 'measure') {
+        raycaster.setFromCamera(mousePos, camera);
+        const hits = raycaster.intersectObjects(getSceneInteractables(), true);
+        if (hits.length > 0) {
+          hoverReticle.visible = true;
+          hoverReticle.position.copy(hits[0].point);
+          if (measurePtA) {
+            previewLine.visible = true;
+            const posArr = previewLine.geometry.attributes.position;
+            posArr.setXYZ(0, measurePtA.x, measurePtA.y, measurePtA.z);
+            posArr.setXYZ(1, hits[0].point.x, hits[0].point.y, hits[0].point.z);
+            posArr.needsUpdate = true;
+
+            const distCm = (measurePtA.distanceTo(hits[0].point) * 100).toFixed(1);
+            liveMeasureTag.querySelector('.measure-pill').innerText = `📏 ${distCm} cm`;
+            liveMeasureTag.style.display = 'block';
+          }
+        } else {
+          hoverReticle.visible = false;
+        }
+      }
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (isWalkLooking) isWalkLooking = false;
+      if (isDraggingFurniture) {
+        isDraggingFurniture = false;
+        if (activeTool !== 'walk') controls.enabled = true;
+      }
+    });
+
+    renderer.domElement.addEventListener('click', (event) => {
+      const moveDist = Math.hypot(event.clientX - pointerDownPt.x, event.clientY - pointerDownPt.y);
+      if (moveDist > 5) return;
+
+      mousePos.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mousePos.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mousePos, camera);
+
+      // Tool-specific Click Handlers
+      if (activeTool === 'measure') {
+        const hits = raycaster.intersectObjects(getSceneInteractables(), true);
+        if (hits.length > 0) {
+          if (!measurePtA) {
+            measurePtA = hits[0].point.clone();
+            playClickSound();
+          } else {
+            addPermanentMeasurement(measurePtA, hits[0].point.clone());
+            measurePtA = null;
+            previewLine.visible = false;
+            liveMeasureTag.style.display = 'none';
+          }
+        }
+        return;
+      }
+
+      if (activeTool === 'layout' || activeTool === 'walk') return;
+
+      // Orbit Default Clicks (Direct 3D Mechanical Interactions + Info Cards)
+      const curtainHits = raycaster.intersectObjects(curtainGroup.children, true);
+      if (curtainHits.length > 0) {
+        toggleCurtain();
+        openDrawer(hotspotsById['hs-wardrobe']);
+        return;
+      }
+      const wardrobeHits = raycaster.intersectObjects(wardrobeGroup.children, true);
+      if (wardrobeHits.length > 0) {
+        openDrawer(hotspotsById['hs-wardrobe']);
+        return;
+      }
+      const doorHits = raycaster.intersectObjects([doorLeaf, jambRear, jambFront, jambTop], true);
+      if (doorHits.length > 0) { toggleDoor(); return; }
+
+      const drawerHits = raycaster.intersectObjects(bedDrawersGroup.children, true);
+      if (drawerHits.length > 0) {
+        toggleDrawer();
+        openDrawer(hotspotsById['hs-drawer']);
+        return;
+      }
+      const catHits = raycaster.intersectObjects(catStationGroup.children, true);
+      if (catHits.length > 0) {
+        if (raycaster.intersectObjects([bucketBase, bucketLid, lidClasp], true).length > 0) toggleCatBucket();
+        openDrawer(hotspotsById['hs-cat']);
+        return;
+      }
+      const racketHits = raycaster.intersectObjects(racketGroup.children, true);
+      if (racketHits.length > 0) {
+        openDrawer(hotspotsById['hs-racket']);
+        return;
+      }
+      const deskOrgHits = raycaster.intersectObjects([orgBase, orgBack, snackTrayGroup, snackPouch1, snackCan], true);
+      if (deskOrgHits.length > 0) {
+        openDrawer(hotspotsById['hs-snack']);
+        return;
+      }
+    });
+
+    // --- 17. Camera Presets & Animation Loop ---
+    function tweenCam(pos, target, dur = 900) {
+      if (activeTool === 'walk') setActiveTool('orbit');
+      new TWEEN.Tween(camera.position).to(pos, dur).easing(TWEEN.Easing.Cubic.InOut).start();
+      new TWEEN.Tween(controls.target).to(target, dur).easing(TWEEN.Easing.Cubic.InOut).start();
+    }
+
+    function setCam(mode) {
+      document.querySelectorAll('.camera-tabs button').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-cam') === mode);
+      });
+      const p = camPresets[mode];
+      if (p) tweenCam(p.pos, p.target);
+    }
+
+    function projectToScreen(vec3) {
+      const tempV = vec3.clone().project(camera);
+      return {
+        x: (tempV.x * 0.5 + 0.5) * window.innerWidth,
+        y: (-tempV.y * 0.5 + 0.5) * window.innerHeight,
+        z: tempV.z
+      };
+    }
+
+    function updateHotspotsAndLabels() {
+      if (hotspotsVisible) {
+        hotspotElems.forEach(h => {
+          const worldPos = h.anchorObj.localToWorld(h.localOffset.clone());
+          const sp = projectToScreen(worldPos);
+          h.elem.style.transform = 'translate(-50%, -50%) translate(' + sp.x + 'px,' + sp.y + 'px)';
+          h.elem.style.zIndex = (sp.z < 1) ? 20 : -1;
+        });
+      }
+      measureLabels.forEach(m => {
+        const sp = projectToScreen(m.pos);
+        m.elem.style.transform = 'translate(-50%, -50%) translate(' + sp.x + 'px,' + sp.y + 'px)';
+        m.elem.style.zIndex = (sp.z < 1) ? 22 : -1;
+      });
+      if (measurePtA && hoverReticle.visible) {
+        const mid = new THREE.Vector3().addVectors(measurePtA, hoverReticle.position).multiplyScalar(0.5);
+        const sp = projectToScreen(mid);
+        liveMeasureTag.style.transform = 'translate(-50%, -50%) translate(' + sp.x + 'px,' + sp.y + 'px)';
+      }
+    }
+
+    // Populate object-tracked camera presets cleanly for any room_spec geometry
+    (function populateDynamicCamPresets() {
+      scene.updateMatrixWorld(true);
+      const wPos = wardrobeRoot.localToWorld(new THREE.Vector3(-3.05, 1.42, 1.25));
+      const wTgt = wardrobeRoot.localToWorld(new THREE.Vector3(-0.05, 1.22, -0.03));
+      camPresets.wardrobe = { pos: { x: wPos.x, y: wPos.y, z: wPos.z }, target: { x: wTgt.x, y: wTgt.y, z: wTgt.z } };
+
+      const dPos = deskGroup.localToWorld(new THREE.Vector3(1.25, 1.45, 0.65));
+      const dTgt = deskGroup.localToWorld(new THREE.Vector3(0, 0.88, 0));
+      camPresets.desk = { pos: { x: dPos.x, y: dPos.y, z: dPos.z }, target: { x: dTgt.x, y: dTgt.y, z: dTgt.z } };
+
+      const bPos = bedGroup.localToWorld(new THREE.Vector3(-2.05, 0.56, 0.90));
+      const bTgt = bedGroup.localToWorld(new THREE.Vector3(-0.50, 0.16, 0.05));
+      camPresets.bed = { pos: { x: bPos.x, y: bPos.y, z: bPos.z }, target: { x: bTgt.x, y: bTgt.y, z: bTgt.z } };
+
+      const cPos = catRoot.localToWorld(new THREE.Vector3(1.13, 1.05, 0.30));
+      const cTgt = catRoot.localToWorld(new THREE.Vector3(0.03, 0.25, 0));
+      camPresets.cat = { pos: { x: cPos.x, y: cPos.y, z: cPos.z }, target: { x: cTgt.x, y: cTgt.y, z: cTgt.z } };
+
+      const rPos = racketRoot.localToWorld(new THREE.Vector3(1.85, 1.52, 0.45));
+      const rTgt = racketRoot.localToWorld(new THREE.Vector3(0.02, 1.36, 0));
+      camPresets.racket = { pos: { x: rPos.x, y: rPos.y, z: rPos.z }, target: { x: rTgt.x, y: rTgt.y, z: rTgt.z } };
+
+      const cur = camPresets[reqCam] || camPresets.iso;
+      camera.position.set(cur.pos.x, cur.pos.y, cur.pos.z);
+      controls.target.set(cur.target.x, cur.target.y, cur.target.z);
+      controls.update();
+    })();
+
+    if (urlParams.get('door') === 'open') {
+      isDoorOpen = true;
+      doorHingeGroup.rotation.y = Math.PI * 0.48;
+      document.getElementById('k-door').classList.add('active');
+    }
+    if (urlParams.get('drawer') === 'open') {
+      isDrawerOpen = true;
+      bedDrawersGroup.position.x = -0.90 + ((S.bed.underDrawerSide === "east") ? 1 : -1) * (S.bed.underDrawerSlide || 0.55);
+      document.getElementById('k-drawer').classList.add('active');
+    }
+    if (urlParams.get('curtain') === 'closed') {
+      isCurtainClosed = true;
+      curtainGroup.scale.z = 8.6;
+      const cbtn = document.getElementById('k-curtain');
+      cbtn.classList.add('active');
+      cbtn.innerText = '🧼 拉开防尘帘';
+    }
+    if (urlParams.get('night') === '1') toggleDayNight();
+    if (urlParams.get('style') && roomStyles[urlParams.get('style')]) applyRoomStyle(urlParams.get('style'));
+    if (urlParams.get('bom') === '1') toggleStyleBomDrawer();
+    if (urlParams.get('tool') === 'layout') {
+      setActiveTool('layout');
+      if (urlParams.get('select')) {
+        selectedMovable = movableItems.find(m => m.id === urlParams.get('select')) || null;
+        updateModeBanner();
+      }
+    }
+    if (urlParams.get('tool') === 'measure') {
+      setActiveTool('measure');
+      addPermanentMeasurement(new THREE.Vector3(-0.50, 0.77, 0.60), new THREE.Vector3(1.16, 0.77, 0.60));
+      addPermanentMeasurement(new THREE.Vector3(0.90, 0.10, -0.24), new THREE.Vector3(0.90, 0.10, 0.21));
+    }
+    if (urlParams.get('tool') === 'catview') setActiveTool('walk', 'cat');
+
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(0.05, clock.getDelta());
+      TWEEN.update();
+
+      if (activeTool === 'walk') {
+        const speed = (walkProfile === 'cat' ? 1.4 : 2.1) * dt;
+        const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), walkYaw);
+        const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), walkYaw);
+        if (walkKeys.w) camera.position.addScaledVector(fwd, speed);
+        if (walkKeys.s) camera.position.addScaledVector(fwd, -speed);
+        if (walkKeys.d) camera.position.addScaledVector(right, speed);
+        if (walkKeys.a) camera.position.addScaledVector(right, -speed);
+        camera.position.x = Math.max(-1.60, Math.min(1.60, camera.position.x));
+        camera.position.z = Math.max(-2.15, Math.min(2.15, camera.position.z));
+      } else {
+        controls.update();
+      }
+
+      // Smart Dynamic Architectural Cutaway Walls
+      if (wallCutawayMode === 'auto') {
+        cutawayWallGroups.east.visible  = !CUTAWAY_SET.has('east')  || (camera.position.x <  HX - 0.15);
+        cutawayWallGroups.west.visible  = !CUTAWAY_SET.has('west')  || (camera.position.x > -HX + 0.15);
+        cutawayWallGroups.south.visible = !CUTAWAY_SET.has('south') || (camera.position.z <  HZ - 0.15);
+        cutawayWallGroups.north.visible = !CUTAWAY_SET.has('north') || (camera.position.z > -HZ + 0.15);
+      } else {
+        Object.values(cutawayWallGroups).forEach(g => g.visible = true);
+      }
+
+      updateHotspotsAndLabels();
+      drawMinimap();
+
+      // Main Scene Fullscreen Render
+      renderer.setScissorTest(false);
+      renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+      renderer.clear();
+      renderer.render(scene, camera);
+
+      // Top-Right ViewCube Render (hide when right drawer overlaps it)
+      const rightDrawerOpen = document.getElementById('drawer').classList.contains('show') ||
+                              document.getElementById('style-bom-drawer').classList.contains('show');
+      document.getElementById('viewcube-overlay').style.display = rightDrawerOpen ? 'none' : 'block';
+      if (!rightDrawerOpen) {
+        gizmoCamera.position.set(0, 0, 3.6).applyQuaternion(camera.quaternion);
+        gizmoCamera.lookAt(0, 0, 0);
+        const vx = window.innerWidth - 110;
+        const vy = window.innerHeight - 166;
+        renderer.clearDepth();
+        renderer.setScissorTest(true);
+        renderer.setScissor(vx, vy, 92, 92);
+        renderer.setViewport(vx, vy, 92, 92);
+        renderer.render(gizmoScene, gizmoCamera);
+        renderer.setScissorTest(false);
+      }
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

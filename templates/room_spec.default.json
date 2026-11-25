@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "title": "单间出租屋 1:1 零改动收纳空间规划",
+    "unit": "meters",
+    "petFriendly": true,
+    "zeroAlteration": true,
+    "styleDefault": "muji"
+  },
+  "room": {
+    "width": 3.6,
+    "depth": 4.8,
+    "height": 2.6,
+    "cutawaySides": ["east", "south"]
+  },
+  "door": {
+    "wall": "west",
+    "offset": -1.65,
+    "width": 0.90,
+    "height": 2.10,
+    "swing": "inward-north"
+  },
+  "window": {
+    "wall": "north",
+    "offset": 0.50,
+    "width": 1.80,
+    "sillHeight": 0.85,
+    "height": 1.30
+  },
+  "bed": {
+    "x": 0.90,
+    "z": -1.25,
+    "width": 1.52,
+    "length": 2.02,
+    "clearance": 0.22,
+    "rotY": 0,
+    "underDrawerSide": "west",
+    "underDrawerHeight": 0.188,
+    "underDrawerSlide": 0.55
+  },
+  "furniture": {
+    "desk": { "x": -1.10, "z": 0.60, "width": 1.20, "depth": 0.60, "rotY": 0 },
+    "chair": { "x": -1.10, "z": 1.15, "rotY": 0 },
+    "wardrobe": { "x": 1.43, "z": 0.85, "width": 0.52, "length": 1.28, "rotY": 0 },
+    "catStation": { "x": -1.48, "z": -0.45, "rotY": 0 },
+    "racketMount": { "x": -1.70, "z": -0.60, "hookY": 1.80, "rotY": 0 },
+    "rug": { "x": -0.18, "z": 0.68, "width": 1.00, "length": 1.95, "rotY": 0 }
+  }
+}

@@ -1,87 +1,84 @@
 ---
 name: room-storage-designer
-description: Use when analyzing room or rental apartment clutter from photos, planning zero-damage storage layouts, generating real-scale 3D WebGL designs and 2D floorplans, or creating precision procurement shopping lists for room organization.
+description: Use when analyzing cluttered bedrooms or rental rooms from photos, planning zero-alteration storage systems for dense clothing, large suitcases, sports gear, or pets, auditing door-swing and walkway clearances, or generating interactive 1:1 3D WebGL room viewers and procurement BOM checklists. Do not use for structural demolition, repainting walls, changing flooring, or MEP plumbing remodeling.
 ---
 
-# Room Storage Designer (房间实景收纳设计与多版本管理空间规划师)
+# Room Storage Designer (`v2.0` 数据驱动版)
 
 ## Overview
-本技能将空间整理学（KonMari / 动线规划）、建筑工程尺度（GB 50096 / GB/T 5824）、现代 3D WebGL 可视化技术与**严格的方案版本管理（Design Version Control）**相结合。专门针对租房族、小户型及多杂物场景（运动器材、宠物用品、零食杂货、快递纸箱堆积），通过照片提取空间刚性骨架，支持输出**多风格一键切换、绝对锁死门窗床位的 1:1 真实比例 3D 设计模型、原图标注施工蓝图及免打孔/打孔精准采购清单**。
+
+**物理真实感优先于幻想装饰，数据与引擎彻底解耦。**  
+本技能将建筑尺度规范（GB 50096）、防宠防破坏选品学、实景照片像素标定，以及可交互 3D WebGL 仿真工作台结合。接到房间照片后，只生成**声明式 `room_spec.json`** 并通过数学脚本过检，再自动生成支持激光测距、第一人称/猫视角漫游、拖拽碰撞预警、2D 实时户型图与 AR QuickLook 导出的 1:1 方案。
 
 ---
 
-## When to Use
+## Core Discipline: Zero Hardcoding & Anti-Hallucination
 
-- 用户提供或询问如何整理凌乱房间、单间出租屋、卧室或书房；
-- 用户需要针对具体杂物（羽毛球拍/球包、大袋猫粮/猫砂、散落零食、快递纸箱）做定制化收纳规划；
-- 用户需要**在多种风格（机能风、露营风、MUJI风）或不同预算档次间进行对比与版本选择**；
-- 用户要求输出**可以看着去采购**的储物清单、尺寸规范与退租无损交房指引；
-- 用户希望获得像装修设计一样的 3D 交互模型或 2D 动线施工图。
-
----
-
-## 绝对建筑刚性原则（Anti-Hallucination Invariance）
-
-> [!CRITICAL]
-> **无论切换哪种风格版本，建筑骨架 100% 绝对锁死！**
-> 任何版本（从 v1.0 基础版到 v2.x 改善版），门朝向、窗户采光面、床架与书桌的相对物理坐标必须 **100% 保持完全一致**。
-> 版本的演进只发生在：**墙面利用方式（免打孔挂架 vs 打孔重型洞洞板 vs 导轨架）、地面软装（地毯材质）、收纳容器质感（纯塑料 vs 碳钢 vs 折叠箱）以及氛围灯光（日光顶灯 vs 3000K 暖光线型灯）**。
+**违背字面规则即违背原则。无一例外：**
+1. **零硬装篡改默认红线**：门洞、门开合朝向、窗户位置、原墙色、地砖与固定床架 100% 绝对锁死。除非用户主动授权“可打孔”，所有版本默认零墙面永久损伤。
+2. **先体检，后出图**：未通过 `scripts/audit_room_spec.py` 碰撞/动线校核前，禁止生成最终 HTML 或向用户宣告完成。
+3. **眼见为实门禁**：3D 模型改动后必须通过 `scripts/verify_render.sh` 抓取全角度无头浏览器截图并使用图片读取亲自目检（确认无悬空、无穿模、无黑洞鬼门），再展示给用户。
 
 ---
 
-## 方案版本管理规范（Semantic Design Versioning）
+## Workflow (4-Step Deterministic Pipeline)
 
-所有方案版本采用 `v<Major>.<Minor>-<StyleSlug>` 命名规范，方便用户进行对比、回滚与确认：
+```dot
+digraph room_pipeline {
+    rankdir=LR;
+    node [shape=box];
+    photo [label="1. 照片提取与刚需清点\n(room_spec.json)"];
+    audit [label="2. 数学碰撞与净空体检\naudit_room_spec.py"];
+    build [label="3. 生成 3D & 实景标注\nbuild_3d + annotate_room"];
+    verify [label="4. 无头多视角目检\nverify_render.sh"];
+    fix [label="修复坐标/规格"];
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        方案版本演进与分支图谱                          │
-├─────────────────┬──────────────────────────────────────────────────────┤
-│ v1.0-Basic      │ 基础免打孔实用版 (预算 ~¥160)                        │
-│                 │ 门后挂钩 + 碳钢推车 + 床底扁箱 (零打孔极速落地)      │
-├─────────────────┼──────────────────────────────────────────────────────┤
-│ v2.0-Tech       │ 进阶改善支线 A：【黑金机能·潮流运动极客版】(~¥1,150) │
-│ (用户首选打孔) │ 冷轧钢洞洞板 + 暖光线型灯 + 深灰地毯 + 黑色收纳系    │
-├─────────────────┼──────────────────────────────────────────────────────┤
-│ v2.1-Camping    │ 进阶改善支线 B：【都市山系·露营游牧版】(~¥980)       │
-│                 │ 军绿折叠箱群 + 剑麻耐抓毯 + 墙面原木猫跳板           │
-├─────────────────┼──────────────────────────────────────────────────────┤
-│ v2.2-MUJI       │ 进阶改善支线 C：【日式暖木·MUJI 治愈原木版】(~¥1,080) │
-│                 │ 宜家 BOAXEL 悬空轨道 + 磨砂抽屉 + 奶白遮光帘         │
-└─────────────────┴──────────────────────────────────────────────────────┘
+    photo -> audit;
+    audit -> fix [label="FAIL"];
+    fix -> audit;
+    audit -> build [label="PASS"];
+    build -> verify;
+    verify -> fix [label="发现悬空/穿模/鬼门"];
+}
 ```
 
-### 版本差异化比对表（Version Diffing Matrix）
+### Step 1: 照片标定与高频杂物清点
+- 阅读 [photo-calibration-guide.md](references/photo-calibration-guide.md)，以门高 (`2.05m`) 和地砖模数 (`600/800mm`) 提取房间长宽及家具坐标，写为 `room_spec.json`。
+- 阅读 [spatial-and-pet-rules.md](references/spatial-and-pet-rules.md)，**逐一核对 6 大易漏杂物**：① 换季长短挂衣与叠衣抽屉；② 20~28 寸大行李箱顶层高位泊位；③ 透明防尘鞋盒；④ 羽拍等长杆器材高位壁挂；⑤ 桌面立式书立与零食架；⑥ 养猫防抓防毛（防尘帘+密封桶+剑麻抓柱）。
 
-| 对比维度 | v1.0-Basic 基础版 | v2.0-Tech 黑金机能版 | v2.1-Camping 露营游牧版 | v2.2-MUJI 治愈原木版 |
-| :--- | :--- | :--- | :--- | :--- |
-| **墙面工法** | 100% 免打孔（门背挂排） | 膨胀螺丝打孔（重型钢板） | 膨胀螺丝打孔（原木跳板） | 膨胀螺丝打孔（宜家导轨） |
-| **羽毛球收纳** | 门后竖挂（基础保护） | 墙面专属斜插展陈架+射灯 | 战术伞绳网袋挂放 | 原木隐形实木卡槽 |
-| **猫咪活动区** | 地面硅胶餐垫 | 地面餐垫 + 黑色密封粮桶 | **空中原木猫道+太空舱** | 极简白色离地碗架 |
-| **零食与杂物** | 3层移动碳钢推车 | 工业级黑推车+磁吸理线 | **侧开折叠箱+蛋卷木板** | **宜家轨道架+半透抽屉** |
-| **地面与灯光** | 沿用房东原地砖与顶灯 | **深灰厚地毯 + 3000K线灯**| **天然剑麻地毯 + 复古马灯**| **羊羔绒毯 + 暖白阅读灯**|
-| **整体预算** | **¥160 ~ ¥200** | **¥1,000 ~ ¥1,300** | **¥900 ~ ¥1,100** | **¥1,000 ~ ¥1,200** |
-| **搬家机动度** | 高（推车拉走） | 高（螺丝拧下补墙膏交房）| **极高（折叠箱直接装车）**| 高（轨道卸下即可带走） |
+### Step 2: 运行静态数学体检 (`MANDATORY`)
+```bash
+python3 scripts/audit_room_spec.py <your_room_spec.json>
+```
+确保通过：**墙内边界零出界、门扇开合扇区全清、`>= 85cm` 主干通道、床下箱高 `< 净高 - 2cm`、抽屉拉出路径与猫食盆/桌椅零干涉**。
 
----
+### Step 3: 注入引擎并生成实景批注图
+- 用 `python3 scripts/build_3d_from_spec.py <room_spec.json> <out_dir>` 生成完整 1:1 交互 HTML（自动打包 `templates/libs/` 与 6 大 Pro 控件：激光测距、摆位拖拽红线、真人/猫视角漫游、2D 实时户型图、ViewCube 魔方、昼夜切换与 BOM 换装清单）。
+- 用 `python3 scripts/annotate_room.py <photo.jpg> <ann.json> <blueprint.jpg>` 生成防越界、带智能引线的实景施工蓝图。
+- 若有改造前后图，注入 [before_after_slider.html](templates/before_after_slider.html) 生成对比看板。
 
-## 3D WebGL 多版本实时切换技术
-
-在 `templates/3d_room_viewer.html` 中内置了：
-1. **多风格 Group 动态挂载与显隐**：通过 `Object.keys(styleGroups).forEach(...)` 实现毫秒级风格切换，无需重新加载页面；
-2. **材质与光线联动**：切换到黑金风时主光降为暗调暖光，地毯实时切为深灰短绒；切换到露营风时切为沙地色剑麻质感；
-3. **右侧 BOM 清单动态响应**：切换版本时，右侧采购清单的单品名、规格、价格及总预算动态重新计算并渲染。
+### Step 4: 多视角目检门禁 (`MANDATORY`)
+- 扩展自定义 3D 构件时必读 [threejs-anti-bug-cookbook.md](references/threejs-anti-bug-cookbook.md)。
+- 启动本地静态 HTTP 服务，执行 `bash scripts/verify_render.sh <url> <out_dir>` 截取全景、衣柜正视、书桌、床底抽出态、猫咪区 5 张截图并用图片查看工具逐一核验。
 
 ---
 
-## 交付与决策交互流程 (User Interaction Protocol)
+## Semantic Design Versioning (4 套预设风格与 BOM)
 
-当用户询问收纳风格或方案时，按以下四步引导决策：
-1. **第一步：提供风格选择卡（Options Presentation）**
-   * 提炼 3~4 种风格的核心气质、适合人群、杂物安放方式与预算区间；
-2. **第二步：确认主干版本（Branch Lock-in）**
-   * 用户选定如 `v2.0 黑金机能风` 后，将其设为默认活动基准；
-3. **第三步：输出对应版本的 3D 模型与点对点采购清单**
-   * 提供该版本的详细施工尺寸、电商搜索关键词与避坑指南；
-4. **第四步：版本归档与微调（Iterative Refinement）**
-   * 若用户后续提出“预算想降 300 元”或“换成露营箱”，则派生出 `v2.0-b` 分支，保留历史记录，方便随时对比。
+| 版本代号 | 定位与壁面工法 | 核心配置与材质切换（硬装零改动） | 参考预算 |
+| :--- | :--- | :--- | :--- |
+| **`v1.0-Basic`** | 极限性价比 · 100% 免打孔 | 轻量碳钢挂衣架 + 涤棉帘 + 门背无痕钩 + PP抽屉 | ¥400 ~ ¥500 |
+| **`v2.2-MUJI`** | 默认推荐 · 治愈原木亚麻风 | 暖橡木碳钢衣柜(含防尘帘) + MUJI 6格磨砂抽屉 + 棉麻脏衣篮 | ¥850 ~ ¥950 |
+| **`v2.0-Tech`** | 黑金机能极客（可选免钉/洞洞板） | 哑光黑钢架 + 熏黑抽屉 + 金扣密封桶 + 深灰短绒地毯 + 暖夜灯 | ¥1,050 ~ ¥1,200 |
+| **`v2.1-Camping`** | 都市露营风（高频搬家直装） | 军绿钢管架 + 侧开折叠箱群 + 剑麻耐磨毯 + 伞绳挂袋 | ¥900 ~ ¥1,050 |
+
+---
+
+## Red Flags & Rationalization Table (STOP 判断清单)
+
+| 偷懒念头 / 典型借口 | 真实后果与强制纠偏 |
+| :--- | :--- |
+| "照片只拍到乱零食和球拍，先不管衣柜行李箱" | **拦截**：租房衣柜+28寸箱占位最大，必须主动询问或在 `room_spec` 中预设专属库位。 |
+| "盒子叠在一起坐标大概对就行了" | **拦截**：产生桌面悬空书、猫咪钻抽屉穿模。桌上物品必须挂父组局部坐标，且过 `audit_room_spec.py`。 |
+| "实心盒子直接画个门套最省事" | **拦截**：门一开变成双门鬼影。必须使用镂空门挺拼接+外走廊照明。 |
+| "看场景不黑就能用，不用切进衣柜特写截图了" | **拦截**：极易遗漏背面 X 撑穿出、遮挡黑洞背景或实心水碗看不见粮水。必须全角度截图目检。 |
